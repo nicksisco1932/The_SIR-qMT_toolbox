@@ -13,4 +13,4 @@ jobs:
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         issue-message: 'Thanks for giving my MRI Toolbox a chance.'
-        pr-message: 'I hope that this works for you. If not, send me an email and let's collaborate on making it better.'
+        pr-message: 'I hope that this works for you.'
