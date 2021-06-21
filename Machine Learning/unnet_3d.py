@@ -66,7 +66,7 @@ def get_model(img_size, num_classes):
     return model
 
 
-# Free up RAM in case the model definition cells were run multiple times
+## Free up RAM in case the model definition cells were run multiple times
 keras.backend.clear_session()
 
 # Build model
