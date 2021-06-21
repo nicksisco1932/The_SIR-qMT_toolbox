@@ -42,6 +42,11 @@
     "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
     "   - initial version \n"
 
+    "\n",
+    "0.0  June 21, 2021 [nsisco]\n"
+    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
+    "   - Updated I/O \n"
+
 =#
 using NIfTI; 
 using LsqFit;

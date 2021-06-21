@@ -1,22 +1,11 @@
 #=
-    Selective inversion recovery fitting using least squares and Levenberg-Marquardt 
-    - This is a collection of helper functions written in Julia for fitting signal acquired from SIR-qMT to a double exponential 
-    equation described in (1,2,3,4). 
-
+    
+    - This is a collection of helper functions written in Julia for The MRI Toolbox
 
     Input and Output Parameters for Code
 
     implimented within a Julia script or in REPL
     > include('./utils.jl')
-
-        Future Updates TO Do:
-        1) user defined ti and td, misc variables, B1 map for T1 MFA, etc.
-        2) user defined kmf
-        3) user defined preprocessing niftis, i.e. flexible input names
-        4) main function within utils
-        5) module creation
-        6) unit testing
-        7) depolyable docker
 
     References:
     1. R. D. Dortch, J. Moore, K. Li, M. Jankiewicz, D. F. Gochberg, J. A. Hirtle, J. C. Gore, S. A. Smith, Quantitative magnetization transfer imaging of human brain at 7T. Neuroimage. 64, 640–649 (2013).
