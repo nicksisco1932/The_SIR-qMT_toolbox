@@ -90,11 +90,6 @@ end
 
 a = commandline()
 
-# base = a["SIR_nii_1"]
-
-# base = parsed_args["input"]
-
-
 function main()
     
 

@@ -51,22 +51,57 @@ using Optim
 
 include("./utils.jl")
 
-parsed_args = parse_commandline();
-for (out, val) in parsed_args
-    println(" $out => $val")
+function commandline()
+        
+
+    settings = ArgParseSettings()
+
+    @add_arg_table! settings begin
+        "TE_1"
+        required = true
+        "TE_2"
+        required = true
+        "TE_3"
+        required = true
+        "TE_4"
+        required = true
+        "TE_5"
+        required = true
+        "SAGE_brainMask"
+        required = true
+    end
+
+    println(parse_args(settings))
+
+    # parsed_args = SIR_parse_commandline();
+    for (out, val) in parse_args(settings)
+        println(" $out => $val")
+    end
+    return parse_args(settings)
 end
 
-base = parsed_args["input"]
+a = commandline()
 
-paths = [ @sprintf("%sPT1319001_TE1_img_w_Skull.nii.gz",base),
-            @sprintf("%sPT1319001_TE2_img_w_Skull.nii.gz",base),
-            @sprintf("%sPT1319001_TE3_img_w_Skull.nii.gz",base), 
-            @sprintf("%sPT1319001_TE4_img_w_Skull.nii.gz",base),
-            @sprintf("%sPT1319001_TE5_img_w_Skull.nii.gz",base)
-            ]
+base = dirname(a["TE_1"])
+paths = [joinpath(base,basename(a["TE_1"])),
+    joinpath(base,basename(a["TE_2"])),
+    joinpath(base,basename(a["TE_3"])),
+    joinpath(base,basename(a["TE_4"])),
+    joinpath(base,basename(a["TE_5"]))
+    ]
+b_fname = joinpath(base,basename(a["SAGE_brainMask"]))
 
-# paths = [ @sprintf("%sMFA_10_angles.nii.gz",base)]
-b_fname = @sprintf("%sbPT1319001_preb_mask.nii.gz",base)
+# base = parsed_args["input"]
+
+# paths = [ @sprintf("%sPT1319001_TE1_img_w_Skull.nii.gz",base),
+#             @sprintf("%sPT1319001_TE2_img_w_Skull.nii.gz",base),
+#             @sprintf("%sPT1319001_TE3_img_w_Skull.nii.gz",base), 
+#             @sprintf("%sPT1319001_TE4_img_w_Skull.nii.gz",base),
+#             @sprintf("%sPT1319001_TE5_img_w_Skull.nii.gz",base)
+#             ]
+
+# # paths = [ @sprintf("%sMFA_10_angles.nii.gz",base)]
+# b_fname = @sprintf("%sbPT1319001_preb_mask.nii.gz",base)
 
 DATA,MASK,nx,ny,nz,ne,nt=load_sage_data(paths,b_fname);
 tot_voxels = nx*ny*nz
@@ -92,41 +127,6 @@ TR = 1800/1000;
 
 X0=[1,100.0,50,1]
 IND=findall(x->x.>0,vec_mask[:,1]);
-
-# function fitty(f::Function,xData::Vector{Float64},Ydata::Array{Float64},x0::Vector{Float64})
-#     # fitY = Optim.minimizer( optimize(b -> f(b, xData,  Ydata), x0))
-    
-#     ub=[Inf,500.0,490,Inf];
-#     lb=[0.0,0,0,0];
-#     fitparm = curve_fit(f,xData,Ydata,x0;autodiff=:finiteforward)
-#     fitY = fitparm.param
-#     return fitY #array of 4
-# end
-
-# function fitSAGE(xData::Vector{Float64},mask::Array{Bool},Ydata::Array{Float64},n::Int64,nx::Int64,ny::Int64,nz::Int64,ne::Int64,nt::Int64,x0::Vector{Float64})
-# function fitSAGE(xData::Vector{Float64},ind::Vector{Int64},Ydata::Array{Float64},n::Int64,nx::Int64,ny::Int64,nz::Int64,ne::Int64,NT::Int64,x0::Vector{Float64})
-#     out = zeros(n,4,NT);
-    
-#     @time for jj in 1:NT
-#         # jj=1
-#         for ii in ind
-#                 # fitY = fitty(sqerrorSAGE,xData,Ydata[ii,:,jj],x0)
-#                 fitY = fitty(SAGE_biexp3p_d,xData,Ydata[ii,:,jj],x0)
-#                 out[ii,:,jj] = fitY;
-#         end
-#     end    
-#     # @time for jj in 1:nt
-#     #     for ii = 1:n
-#     #         if mask[ii]
-#     #             # fitY = fitty(sqerrorSAGE,xData,Ydata[ii,:,jj],x0)
-#     #             fitY = fitty(SAGE_biexp3p_d,xData,Ydata[ii,:,jj],x0)
-#     #             out[ii,:,jj] = fitY;
-#     #         end
-#     #     end
-#     # end
-#     return out
-# end
-
 
 function optim_fitty(f::Function, xdata::Vector{Float64},data::Vector{Float64},x0::Vector{Float64})
     # fitdata = Optim.minimizer( optimize(b -> sqerrorSAGE(b, xdata,  data), x0))
