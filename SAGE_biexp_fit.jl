@@ -51,29 +51,34 @@ using Optim
 
 include("./utils.jl")
 
+thr = Threads.nthreads()
+if thr==16
+    Threads.nthreads() = 8
+    return thr = 8
+end
 function commandline()
         
 
     settings = ArgParseSettings()
 
     @add_arg_table! settings begin
-        "TE_1"
+        "TE_nii_1"
         required = true
-        "TE_2"
+        "TE_nii_2"
         required = true
-        "TE_3"
+        "TE_nii_3"
         required = true
-        "TE_4"
+        "TE_nii_4"
         required = true
-        "TE_5"
+        "TE_nii_5"
         required = true
-        "SAGE_brainMask"
+        "SAGE_nii_brainMask"
         required = true
     end
 
     println(parse_args(settings))
 
-    # parsed_args = SIR_parse_commandline();
+    # parsed_args = TE_parse_commandline();
     for (out, val) in parse_args(settings)
         println(" $out => $val")
     end
@@ -82,41 +87,30 @@ end
 
 a = commandline()
 
+function optim_fitty(f::Function, xdata::Vector{Float64},data::Vector{Float64},x0::Vector{Float64})
+    # fitdata = Optim.minimizer( optimize(b -> sqerrorSAGE(b, xdata,  data), x0))
+    fitdata = curve_fit(f,xdata,data,x0;autodiff=:finiteforward) # this is faster and has good results
+    return fitdata
+end
+
 function main()
-    base = dirname(a["TE_1"])
-    paths = [joinpath(base,basename(a["TE_1"])),
-        joinpath(base,basename(a["TE_2"])),
-        joinpath(base,basename(a["TE_3"])),
-        joinpath(base,basename(a["TE_4"])),
-        joinpath(base,basename(a["TE_5"]))
+    
+
+
+    base = dirname(a["TE_nii_1"])
+    paths = [joinpath(base,basename(a["TE_nii_1"])),
+        joinpath(base,basename(a["TE_nii_2"])),
+        joinpath(base,basename(a["TE_nii_3"])),
+        joinpath(base,basename(a["TE_nii_4"])),
+        joinpath(base,basename(a["TE_nii_5"]))
         ]
-    b_fname = joinpath(base,basename(a["SAGE_brainMask"]))
-
-    # base = parsed_args["input"]
-
-    # paths = [ @sprintf("%sPT1319001_TE1_img_w_Skull.nii.gz",base),
-    #             @sprintf("%sPT1319001_TE2_img_w_Skull.nii.gz",base),
-    #             @sprintf("%sPT1319001_TE3_img_w_Skull.nii.gz",base), 
-    #             @sprintf("%sPT1319001_TE4_img_w_Skull.nii.gz",base),
-    #             @sprintf("%sPT1319001_TE5_img_w_Skull.nii.gz",base)
-    #             ]
-
-    # # paths = [ @sprintf("%sMFA_10_angles.nii.gz",base)]
-    # b_fname = @sprintf("%sbPT1319001_preb_mask.nii.gz",base)
+    b_fname = joinpath(base,basename(a["SAGE_nii_brainMask"]))
 
     DATA,MASK,nx,ny,nz,ne,nt=load_sage_data(paths,b_fname);
     tot_voxels = nx*ny*nz
     vec_mask = reshape(MASK[:,:,:,1,1],tot_voxels,1);
 
     vec_data = reshape(DATA,tot_voxels,ne,nt)
-
-
-    thr = Threads.nthreads()
-    if thr==16
-        Threads.nthreads() = 8
-        return thr = 8
-    end
-    println("Fitting with $thr threads")
 
     te1=0.007653;
     te2=0.027969;
@@ -129,11 +123,6 @@ function main()
     X0=[1,100.0,50,1]
     IND=findall(x->x.>0,vec_mask[:,1]);
 
-    function optim_fitty(f::Function, xdata::Vector{Float64},data::Vector{Float64},x0::Vector{Float64})
-        # fitdata = Optim.minimizer( optimize(b -> sqerrorSAGE(b, xdata,  data), x0))
-        fitdata = curve_fit(f,xdata,data,x0;autodiff=:finiteforward) # this is faster and has good results
-        return fitdata
-    end
 
     fitdata = zeros(tot_voxels,4,nt);
     @time for JJ=1:150;
@@ -170,5 +159,8 @@ function main()
 
     println("The R2s is saved at $R2s_fname")
     println("The R2 is saved at $R2_fname")
+
+
 end
+
 main()
