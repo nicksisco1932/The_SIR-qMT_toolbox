@@ -38,39 +38,7 @@ function  denoiseMatrix(X)
 
 end
 
-using NIfTI; 
-using LsqFit;
-using Printf
-using ArgParse;
-using Optim
 
-include("./utils.jl")
-
-
-te1=0.007653;
-te2=0.027969;
-te3=0.059074;
-te4=0.07939;
-te5=0.099706;
-echos=[te1,te2,te3,te4,te5]
-
-
-
-a = LinRange(75,150,128);
-b = LinRange(20,70,128);
-# mat_img = zeros(128,128,15,5);
-# R2_map = zeros(128,128);
-# R2s_map = zeros(128,128);
-# SNR=150;
-# for ii in 1:128
-#     for jj in 1:128
-#         for kk in 1:15
-#             X0 = [1,a[ii],b[jj],500];
-#             Yy = SAGE_biexp3p_d(echos,X0);
-#             mat_img[ii,jj,kk,:] = Yy+rand(5)/SNR
-#         end
-#     end
-# end
 X = rand(128,5)
 
 dnX,sig,p = denoiseMatrix(X)
