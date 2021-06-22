@@ -47,6 +47,10 @@
     "0.0  June 18, 2021 [nsisco]\n"
     "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
     "   - initial version \n"
+    "\n",
+    "0.1  June 22, 2021 [nsisco]\n"
+    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
+    "   - Changed I/O \n"
 
 =#
 using NIfTI; 
@@ -64,15 +68,69 @@ end
 
 base = parsed_args["input"]
 
+function commandline()
+        
+
+    settings = ArgParseSettings()
+
+    @add_arg_table! settings begin
+        "TE_nii_1"
+        required = true
+        "nii_brainMask"
+        required = false
+    end
+
+    println(parse_args(settings))
+
+    # parsed_args = TE_parse_commandline();
+    for (out, val) in parse_args(settings)
+        println(" $out => $val")
+    end
+    return parse_args(settings)
+end
+
+a = commandline()
+
+
+
 function main()
     
+    base = dirname(a["MFA_nii"])
+    try
+        b_fname = joinpath(base,basename(a["nii_brainMask"]))
+        brain_data = niread(b_fname);
+        MASK=Array{Bool}(brain_data.raw);
+        NO_MASK = false
+    catch
+        println("No mask, fitting all voxels")
+        NO_MASK = true
+    end
 
-    paths = [ @sprintf("%sMFA_10_angles.nii.gz",base)]
-    b_fname = @sprintf("%sMFA_brain_mask.nii.gz",base)
+    b_fname = joinpath(base,basename(a["nii_brainMask"]))
     
     DATA,MASK,nx,ny,nz,nt=load_data(paths,b_fname);
+
+    data1 = niread(paths[1]);
+    
+    nx,ny,nz=size(data1);
+    nt = length(paths);
+    DATA = Array{Float64}(zeros(nx,ny,nz,nt));
+    try
+        for (n,ii) in enumerate(paths)
+            DATA[:,:,:,n] = loader(ii);
+        end    
+    catch
+        DATA = loader(paths[1]);
+        nx,ny,nz,nt = size(DATA)
+    end
+
+
     tot_voxels = nx*ny*nz
-    vec_mask = dropdims(reshape(MASK[:,:,:,1,1],tot_voxels,1);dims=2) #change this eventually
+    if NO_MASK
+        vec_mask = ones(tot_voxels)
+    else
+        vec_mask = dropdims(reshape(MASK[:,:,:,1,1],tot_voxels,1);dims=2) #change this eventually
+    end
 
     vec_data = reshape(DATA,tot_voxels,nt)
 
