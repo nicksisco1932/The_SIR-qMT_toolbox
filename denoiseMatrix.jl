@@ -9,27 +9,13 @@ function  denoiseMatrix(X)
 
     M,N = size(X);
     minMN = minimum([M N]);
-    Xm = mean(X,dims=2)
+    Xm = mean(X,dims=2)[:,1]
     X = X.-Xm
 
-    if M<N
-        Xin = Array{Float64}(X')
-        # U,lambda = eigvals(X*Xin);
-        # U = eigvecs(Xin*X);
-        # lambda = eigvals(Xin*X);
-        F = svd(Xin*X)
-        U,S,V = F;
-        lambda = S.^2/N;
-    else
-        Xin = Array{Float64}(X')
-        
-        # U = eigvecs(Xin*X);
-        # lambda = eigvals(Xin*X);
-        F = svd(X*Xin)
-        U,S,V = F;
-        lambda = S.^2/N;
-    end
-    
+    F = svd(X)
+    U,S,V = F;
+    lambda = S.^2/N;
+
     p = 0;
     pTest = false;
     
@@ -46,8 +32,7 @@ function  denoiseMatrix(X)
     end
     sigma2 = sum(lambda[p+1:minMN]/ (minMN-p) /scaling[p+1])
 
-    invV = Array{Float64}(V[:,1:p]')
-    newX = U[:,1:p] * S[1:p,1:p] * invV + Xm
+    newX = U[:,1:p] * diagm(S)[1:p,1:p] * transpose(V[:,1:p]) .+ Xm
 
     return newX, sigma2, p
 
@@ -88,4 +73,4 @@ b = LinRange(20,70,128);
 # end
 X = rand(128,5)
 
-denoiseMatrix(X)
+dnX,sig,p = denoiseMatrix(X)
