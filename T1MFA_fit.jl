@@ -4,9 +4,7 @@
     Affiliation: Barrow Neurological Institue in Phoenix, AZ
 
     Title: Multi-flip angle T1 fitting using least squares and Levenberg-Marquardt 
-    - This is a basic script written in Julia for fitting signal acquired from SIR-qMT to a double exponential 
-    equation described in (1,2,3,4). 
-
+    - This is a basic script written in Julia for fitting signal acquired multi-flip angle MRI. It is based on the Ernst angle.
 
     Requirements:
     - Julia 1.5
@@ -16,8 +14,9 @@
     utils.jl needs to be in the same directory as this script
 
     User supplied data:
+        - julia needs to be in your $PATH for this command structure to work
         - Command line usage
-        $ julia -t <threads #> SIR_PING_Brain_20210617_v2.jl <path to Python processed data>
+        $ julia -t <threads #> T1MFA_fit.jl <path to Python processed data>
 
         - In the Python processed directory, there should be nt number of preprocessed nifti files, corresponding 
         to the number of dynamic time points in the data, e.g. nt = 4 means there are ti = [15,15,...,...], etc.
@@ -27,19 +26,11 @@
 
 
     Future Updates TO Do:
-        1) user defined ti and td
-        2) user defined kmf
-        3) user defined preprocessing niftis, i.e. flexible input names
-        4) main function within utils
-        5) module creation
-        6) unit testing
-        7) depolyable docker
+        1) add in user defined B1 files
+        2) other things
 
     References:
-    1. R. D. Dortch, J. Moore, K. Li, M. Jankiewicz, D. F. Gochberg, J. A. Hirtle, J. C. Gore, S. A. Smith, Quantitative magnetization transfer imaging of human brain at 7T. Neuroimage. 64, 640–649 (2013).
-    2. F. Bagnato, G. Franco, F. Ye, R. Fan, P. Commiskey, S. A. Smith, J. Xu, R. Dortch, Selective inversion recovery quantitative magnetization transfer imaging: Toward a 3 T clinical application in multiple sclerosis. Mult. Scler. J. 26, 457–467 (2020).
-    3. R. D. Dortch, F. Bagnato, D. F. Gochberg, J. C. Gore, S. A. Smith, Optimization of selective inversion recovery magnetization transfer imaging for macromolecular content mapping in the human brain. Magn. Reson. Med. 80, 1824–1835 (2018).
-    4. R. D. Dortch, K. Li, D. F. Gochberg, E. B. Welch, A. N. Dula, A. A. Tamhane, J. C. Gore, S. A. Smith, Quantitative magnetization transfer imaging in human brain at 3 T via selective inversion recovery. Magn. Reson. Med. 66, 1346–1352 (2011).
+    
 
     Change log:
     "history (of nifti library changes):\n"
