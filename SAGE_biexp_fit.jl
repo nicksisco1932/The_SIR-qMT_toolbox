@@ -27,10 +27,9 @@
     Future Updates TO Do:
         1) user defined echo times
         2) user defined preprocessing niftis, i.e. flexible input names
-        3) main function within utils
-        4) module creation
-        5) unit testing
-        6) depolyable docker
+        3) module creation
+        4) unit testing
+        5) depolyable docker
 
     References:
     1. H. Schmiedeskamp, M. Straka, R. D. Newbould, G. Zaharchuk, J. B. Andre, J. M. Olivot, M. E. Moseley, G. W. Albers, R. Bammer, Combined spin- and gradient-echo perfusion-weighted imaging. Magn. Reson. Med. 68, 30–40 (2012).
