@@ -98,6 +98,16 @@ function optim_fitty(f::Function, xdata::Vector{Float64},data::Vector{Float64},x
     return fitdata
 end
 
+function work(IND::Vector{Int64},f::Function,echos::Vector{Float64},vec_data::Array{Float64},X0::Vector{Float64},fitdata::Array{Float64})
+    Threads.@threads for ii in IND
+        temp = vec_data[ii,:];
+        fitY = optim_fitty(f, echos, temp, X0)
+        # fitY = optim_fitty(echos, temp, X0)
+        fitdata[ii,:] = fitY.param
+    end
+    return fitdata
+end
+
 function main()
     
 
@@ -131,12 +141,11 @@ function main()
 
     fitdata = zeros(tot_voxels,4,nt);
     @time for JJ=1:150;
-        for ii in IND
-            temp = vec_data[ii,:,JJ];
-            fitY = optim_fitty(SAGE_biexp3p_d, echos, temp, X0)
-            # fitY = optim_fitty(echos, temp, X0)
-            fitdata[ii,:,JJ] = fitY.param
-        end
+        temp = vec_data[:,:,JJ]
+        tempFit_data = fitdata[:,:,JJ]
+        
+        fitdata[:,:,JJ] = work(IND,SAGE_biexp3p_d,echos,temp,X0,tempFit_data)
+
     end
     #-------------------------------------  
     Xv = Array{Float64}(fitdata);
