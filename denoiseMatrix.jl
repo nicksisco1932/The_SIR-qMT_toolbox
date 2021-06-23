@@ -71,14 +71,15 @@ function denoiseVol(vol,w,mask=[])
         k =  floor((1-1)/m/n)+1;
         j = floor((ii-1-(k-1)*m*n)/m )+1
         i = ii - (k-1)*m*n-(j-1)*m;
-
+        println(j)
         rows = Array{Int64}(collect(i:i-1+w[1]))
         cols = Array{Int64}(collect(j:j-1+w[2]))
         slis = Array{Int64}(collect(k:k-1+w[3]))
 
         maskCheck = reshape(mask[rows,cols,slis],N,1)
 
-        X = reshape(vol[rows,cols,slis,:],M,N)
+        # X = reshape(vol[rows,cols,slis,:],M,N)
+        # println(size(X))
 
     end
 
@@ -89,10 +90,65 @@ X = rand(128,5)
 
 dnX,sig,p = denoiseMatrix(X)
 
-w = 5
-
-using RollingFunctions
+w = [5,5,5]
 
 X = rand(128,128,15,5);
 
-rolling(denoiseMatrix,X,w)
+using IterTools
+
+# for i in partition(1:128,3,1)
+#     for j in partition(1:128,3,1)
+#         @show X[i,j,:,1]
+#     end
+# end
+
+for i in subsets(1:128,5)
+    for j in subsets(1:128,5)
+        for k in subsets(1:15,5)
+            # s = X[i,j,k,:]
+            @show i
+            # denoiseMatrix(s)
+        end
+    end
+end
+
+
+n = 128
+m = 15
+k = 3
+for (nn,ii) in enumerate(1:k:n-k+1)
+    for (nm,jj) in enumerate(1:k:n-k+1)
+        for (no,kk) in enumerate(1:k:m-k+1)
+            @show size(X[nn:ii,nm:jj,no:kk,:])
+        end
+    end
+end
+
+function dnNS(X,n,m,k)
+    nx,ny,nz,nt = size(X)
+    L = size(X)[end]
+    newX = zeros(size(X))
+    sigs = zeros(nx,ny,nz)
+    MP = zeros(nx,ny,nz)
+
+    for ii in 1:k:n-k+1
+        for kk in 1:k:n-k+1
+            for jj in 1:k:m-k+1
+                o1 = ii:ii+k-1
+                o2 = kk:kk+k-1
+                o3 = jj:jj+k-1
+                vec_X = reshape(X[o1,o2,o3,:],k*k*k,L)
+                dnX,sig,p = denoiseMatrix(vec_X)
+                rdnX = reshape(dnX,k,k,k,L)
+                # rdnSig = reshape(sig,k,k,k)
+                # rdnP = reshape(p,k,k,k)
+                newX[o1,o2,o3,:] = rdnX
+                # sigs[o1,o2,o3] = rdnSig
+                # MP[o1,o2,o3] = rdnP
+            end
+        end
+    end
+    return newX
+end
+x = rand(128,128,15,5);
+dn_X = dnNS(x,n,m,k)
