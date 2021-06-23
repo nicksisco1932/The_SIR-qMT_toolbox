@@ -38,53 +38,53 @@ function  denoiseMatrix(X)
 
 end
 
-function denoiseVol(vol,w,mask=[])
-    nx_orig,ny_orig,nz_orig,nt_orig = size(vol);
-    nx,ny,nz,nt = size(vol);
+# function denoiseVol(vol,w,mask=[])
+#     nx_orig,ny_orig,nz_orig,nt_orig = size(vol);
+#     nx,ny,nz,nt = size(vol);
 
-    if mask == Any[]
-        mask = ones(size(vol[:,:,:,1]));
-    end
+#     if mask == Any[]
+#         mask = ones(size(vol[:,:,:,1]));
+#     end
 
-    @assert(length(w)>1 && length(w)<4)
+#     @assert(length(w)>1 && length(w)<4)
 
-    if length(w) == 2
-        tmp= ones(size(x)[1]+1)
-        tmp[1:2] = w
-        w = tmp
-    end
+#     if length(w) == 2
+#         tmp= ones(size(x)[1]+1)
+#         tmp[1:2] = w
+#         w = tmp
+#     end
 
-    M = nt;
-    N = prod(w)
-    denoised = zeros(size(vol));
+#     M = nt;
+#     N = prod(w)
+#     denoised = zeros(size(vol));
 
-    p = zeros(nx,ny,nz);
-    S2 = zeros(nx,ny,nz);
+#     p = zeros(nx,ny,nz);
+#     S2 = zeros(nx,ny,nz);
 
-    m = nx - w[1]+1;
-    n = ny - w[2]+1;
-    o = nz - w[3]+1;
+#     m = nx - w[1]+1;
+#     n = ny - w[2]+1;
+#     o = nz - w[3]+1;
     
 
-    for (count,ii) in enumerate(1:m*n*o)
+#     for (count,ii) in enumerate(1:m*n*o)
         
-        k =  floor((1-1)/m/n)+1;
-        j = floor((ii-1-(k-1)*m*n)/m )+1
-        i = ii - (k-1)*m*n-(j-1)*m;
-        println(j)
-        rows = Array{Int64}(collect(i:i-1+w[1]))
-        cols = Array{Int64}(collect(j:j-1+w[2]))
-        slis = Array{Int64}(collect(k:k-1+w[3]))
+#         k =  floor((1-1)/m/n)+1;
+#         j = floor((ii-1-(k-1)*m*n)/m )+1
+#         i = ii - (k-1)*m*n-(j-1)*m;
+#         println(j)
+#         rows = Array{Int64}(collect(i:i-1+w[1]))
+#         cols = Array{Int64}(collect(j:j-1+w[2]))
+#         slis = Array{Int64}(collect(k:k-1+w[3]))
 
-        maskCheck = reshape(mask[rows,cols,slis],N,1)
+#         maskCheck = reshape(mask[rows,cols,slis],N,1)
 
-        # X = reshape(vol[rows,cols,slis,:],M,N)
-        # println(size(X))
+#         # X = reshape(vol[rows,cols,slis,:],M,N)
+#         # println(size(X))
 
-    end
+#     end
 
     
-end
+# end
 
 X = rand(128,5)
 
