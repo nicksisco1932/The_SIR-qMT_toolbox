@@ -9,6 +9,9 @@
 
     Requirements:
     - Julia 1.5
+    - utils.jl
+    - five echo times with corresponding images
+    - one brain image
 
     Input and Output Parameters for Code
 
