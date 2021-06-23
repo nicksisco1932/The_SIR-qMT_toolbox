@@ -46,6 +46,10 @@
     "0.1  June 21, 2021 [nsisco]\n"
     "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
     "   - Updated I/O \n"
+    "\n",
+    "0.2  June 23, 2021 [nsisco]\n"
+    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
+    "   - Added a progress meter and tested multi threading \n"
 
 =#
 using NIfTI; 
@@ -99,12 +103,14 @@ function optim_fitty(f::Function, xdata::Vector{Float64},data::Vector{Float64},x
 end
 
 function work(IND::Vector{Int64},f::Function,echos::Vector{Float64},vec_data::Array{Float64},X0::Vector{Float64},fitdata::Array{Float64})
-    Threads.@threads for ii in IND
+    # Threads.@threads for ii in IND # surprisingly, threads is not faster
+    for ii in IND
         temp = vec_data[ii,:];
         fitY = optim_fitty(f, echos, temp, X0)
         # fitY = optim_fitty(echos, temp, X0)
         fitdata[ii,:] = fitY.param
     end
+    
     return fitdata
 end
 
@@ -140,12 +146,20 @@ function main()
 
 
     fitdata = zeros(tot_voxels,4,nt);
-    @time for JJ=1:150;
+#= Testing
+    # Threads.@threads for ii in IND
+        
+    #     fitY = optim_fitty(SAGE_biexp3p_d, echos, vec_data[ii,:,1], X0)
+    # end
+    # tempFit_data = fitdata[:,:,1]
+    # @time work(IND,SAGE_biexp3p_d,echos,vec_data[:,:,1],X0,tempFit_data,1)
+=#
+    @time for JJ=1:nt;
         temp = vec_data[:,:,JJ]
         tempFit_data = fitdata[:,:,JJ]
         
-        fitdata[:,:,JJ] = work(IND,SAGE_biexp3p_d,echos,temp,X0,tempFit_data)
-
+        @time fitdata[:,:,JJ] = work(IND,SAGE_biexp3p_d,echos,temp,X0,tempFit_data)
+        println("Done with Fit $JJ of $nt")
     end
     #-------------------------------------  
     Xv = Array{Float64}(fitdata);
