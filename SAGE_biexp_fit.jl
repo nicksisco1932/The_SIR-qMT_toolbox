@@ -23,6 +23,32 @@
 
         - The echo times are still hard coded
 
+    To Run this within MATLAB:
+        % CHANGE PATHS AND NAMES ACCORDINGLY. NOT TESTED ON WINDOWS
+        % To set: Julia path, This scrip path, your files pathes.
+        base_path = "/Volumes/GraceHopper/HFTT/1420021/NS/";
+        te1 = sprintf("%s1420021_LEFT_e1_tshift_bet.nii.gz",base_path);
+        te2 = sprintf("%s1420021_LEFT_e2_tshift_bet.nii.gz",base_path);
+        te3 = sprintf("%s1420021_LEFT_e3_tshift_bet.nii.gz",base_path);
+        te4 = sprintf("%s1420021_LEFT_e4_tshift_bet.nii.gz",base_path);
+        te5 = sprintf("%s1420021_LEFT_e5_tshift_bet.nii.gz",base_path);
+        b_fname = sprintf("%s1420021_LEFT_e2_tshift_tmean_bet_mask.nii.gz",base_path);
+        R2s_fname = sprintf("%sSAGE_R2s_Brain_julia.nii.gz",path);
+        R2_fname = sprintf("%sSAGE_R2s_Brain_julia.nii.gz",path);
+        %% Function definition from here.
+        [r2simg,r2img] = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname);
+            function [r2simg,r2img] = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname)
+            julia_cmd = "/usr/local/bin/julia";
+            SAGE_Fit_julia = "/Users/StokesLab/Documents/EK/Code/The_MRI_toolbox/SAGE_biexp_fit.jl";
+            unix(sprintf("%s %s %s %s %s %s %s %s",julia_cmd,SAGE_Fit_julia,te1,te2,te3,te4,te5,b_fname))
+            r2s = sprintf("%s/SAGE_R2s_Brain_julia.nii.gz",base_path);
+            r2 = sprintf("%s/SAGE_R2_Brain_julia.nii.gz",base_path);
+            info = niftiinfo(r2s);
+            r2simg = niftiread(info);
+            info = niftiinfo(r2);
+            r2img = niftiread(info);
+        end
+
     Output:
         - The output from this script are two nifti files for the fitting parameters R2star and R2.
 
@@ -52,6 +78,10 @@
     "0.2  June 23, 2021 [nsisco]\n"
     "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
     "   - Added a progress meter and tested multi threading \n"
+    "\n",
+    "0.3  June 24, 2021 [nsisco]\n"
+    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
+    "   - Added some MATLAB coding implimentation \n"
 
 =#
 using NIfTI; 
