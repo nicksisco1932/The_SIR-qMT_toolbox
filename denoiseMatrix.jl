@@ -38,53 +38,85 @@ function  denoiseMatrix(X)
 
 end
 
-# function denoiseVol(vol,w,mask=[])
-#     nx_orig,ny_orig,nz_orig,nt_orig = size(vol);
-#     nx,ny,nz,nt = size(vol);
+function denoiseVol(vol,w,mask=[])
+    nx_orig,ny_orig,nz_orig,nt_orig = size(vol);
+    nx,ny,nz,nt = size(vol);
 
-#     if mask == Any[]
-#         mask = ones(size(vol[:,:,:,1]));
-#     end
+    if mask == Any[]
+        mask = ones(size(vol[:,:,:,1]));
+    end
 
-#     @assert(length(w)>1 && length(w)<4)
+    @assert(length(w)>1 && length(w)<4)
 
-#     if length(w) == 2
-#         tmp= ones(size(x)[1]+1)
-#         tmp[1:2] = w
-#         w = tmp
-#     end
+    if length(w) == 2
+        tmp= ones(size(x)[1]+1)
+        tmp[1:2] = w
+        w = tmp
+    end
 
-#     M = nt;
-#     N = prod(w)
-#     denoised = zeros(size(vol));
+    M = nt;
+    N = prod(w)
+    denoised = zeros(size(vol));
 
-#     p = zeros(nx,ny,nz);
-#     S2 = zeros(nx,ny,nz);
+    p = zeros(nx,ny,nz);
+    S2 = zeros(nx,ny,nz);
 
-#     m = nx - w[1]+1;
-#     n = ny - w[2]+1;
-#     o = nz - w[3]+1;
+    m = nx - w[1]+1;
+    n = ny - w[2]+1;
+    o = nz - w[3]+1;
     
+    newX = zeros(size(vol));
+    sigs = zeros(nx,ny,nz);
+    MP = zeros(nx,ny,nz);
 
-#     for (count,ii) in enumerate(1:m*n*o)
+    Threads.@threads for ii in 1:m*n*o
         
-#         k =  floor((1-1)/m/n)+1;
-#         j = floor((ii-1-(k-1)*m*n)/m )+1
-#         i = ii - (k-1)*m*n-(j-1)*m;
-#         println(j)
-#         rows = Array{Int64}(collect(i:i-1+w[1]))
-#         cols = Array{Int64}(collect(j:j-1+w[2]))
-#         slis = Array{Int64}(collect(k:k-1+w[3]))
+        k =  floor((ii-1)/m/n)+1;    
+        j = floor((ii-1-(k-1)*m*n)/m )+1
+        i = ii - (k-1)*m*n-(j-1)*m;
 
-#         maskCheck = reshape(mask[rows,cols,slis],N,1)
+        rows = Array{Int64}(collect(i:i-1+w[1]))
+        cols = Array{Int64}(collect(j:j-1+w[2]))
+        slis = Array{Int64}(collect(k:k-1+w[3]))
 
-#         # X = reshape(vol[rows,cols,slis,:],M,N)
-#         # println(size(X))
+        maskCheck = reshape(mask[rows,cols,slis],N,1)
 
-#     end
+        X = reshape(vol[rows,cols,slis,:],N,M)
 
-    
-# end
+        dnX,sig,p = denoiseMatrix(X)
+        # @show size(sig)
+        # @show sig
+        rdnX = reshape(dnX,w[1],w[2],w[3],M)
+        # rsig = reshape(sig,w[1],w[2],w[3])
+        # rmp = reshape(p,w[1],w[2],w[3])
+        
+        newX[rows,cols,slis,:] = rdnX
+        sigs[rows,cols,slis] .= sig
+        MP[rows,cols,slis] .= p
+
+
+    end
+
+    return newX,sigs,MP
+end
+
+using NIfTI
+using Printf
+DATA = zeros(224,224,55,4);
+for ii in 1:4
+    fname = @sprintf("/mnt/c/Users/nicks/Documents/Github/SIR_qMT_python/inputs/SIR_T1_%s.nii.gz",ii)
+    img = niread(fname);
+    DATA[:,:,:,ii] = img.raw
+end
+
+mask=[]
+dn_DATA,dnsigs,dnMP = denoiseVol(DATA,w,mask);
+
+niwrite("/mnt/c/Users/nicks/Documents/Github/The_MRI_toolbox/scratch/in.nii.gz",NIVolume(DATA))
+niwrite("/mnt/c/Users/nicks/Documents/Github/The_MRI_toolbox/scratch/out.nii.gz",NIVolume(dn_DATA))
+niwrite("/mnt/c/Users/nicks/Documents/Github/The_MRI_toolbox/scratch/res.nii.gz",NIVolume(DATA-dn_DATA))
+niwrite("/mnt/c/Users/nicks/Documents/Github/The_MRI_toolbox/scratch/out_sig.nii.gz",NIVolume(dnsigs))
+niwrite("/mnt/c/Users/nicks/Documents/Github/The_MRI_toolbox/scratch/out_MP.nii.gz",NIVolume(dnMP))
 
 X = rand(128,5)
 
