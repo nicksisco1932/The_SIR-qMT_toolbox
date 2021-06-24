@@ -170,7 +170,7 @@ function main()
     te3=0.059074;
     te4=0.07939;
     te5=0.099706;
-    echos=[te1,te2,te3,te4,te5]
+    echos=Vector{Float64}([te1,te2,te3,te4,te5])
     TR = 1800/1000;
 
     X0=[1,100.0,50,1]
