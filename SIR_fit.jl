@@ -148,12 +148,22 @@ function main()
     tmp2 = voxel_size(d.header)[2]
     tmp3 = voxel_size(d.header)[3]
 
-    PSR_fname = @sprintf("%sSIR_Brain_PSR_julia.nii.gz",base)
-    R1f_fname = @sprintf("%sSIR_Brain_R1f_julia.nii.gz",base)
-    SF_fname = @sprintf("%sSIR_Brain_Sf_julia.nii.gz",base)
+    PSR_fname = @sprintf("%s/SIR_Brain_PSR_julia.nii.gz",base)
+    R1f_fname = @sprintf("%s/SIR_Brain_R1f_julia.nii.gz",base)
+    SF_fname = @sprintf("%s/SIR_Brain_Sf_julia.nii.gz",base)
+
+    fname_1 = @sprintf("%s/SIR_T1_1.nii.gz",base)
+    fname_2 = @sprintf("%s/SIR_T1_2.nii.gz",base)
+    fname_3 = @sprintf("%s/SIR_T1_3.nii.gz",base)
+    fname_4 = @sprintf("%s/SIR_T1_4.nii.gz",base)
     niwrite(PSR_fname,NIVolume(PSR;voxel_size=(tmp1,tmp2,tmp3)))
     niwrite(R1f_fname,NIVolume(R1f;voxel_size=(tmp1,tmp2,tmp3)))
     niwrite(SF_fname,NIVolume(Sf;voxel_size=(tmp1,tmp2,tmp3)))
+
+    niwrite(fname_1,NIVolume(DATA[:,:,:,1];voxel_size=(tmp1,tmp2,tmp3)))
+    niwrite(fname_2,NIVolume(DATA[:,:,:,2];voxel_size=(tmp1,tmp2,tmp3)))
+    niwrite(fname_3,NIVolume(DATA[:,:,:,3];voxel_size=(tmp1,tmp2,tmp3)))
+    niwrite(fname_4,NIVolume(DATA[:,:,:,4];voxel_size=(tmp1,tmp2,tmp3)))
 
     println("The PSR is saved at $PSR_fname")
     println("The R1f is saved at $R1f_fname")
