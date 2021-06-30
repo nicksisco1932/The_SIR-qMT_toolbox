@@ -60,7 +60,7 @@ end
 
 ```
 
-**Results of a Successful fit**
+**Results of a Successful SIR-qMT fit**
 <p align="center">
   <img src="https://github.com/nicksisco1932/The_MRI_toolbox/blob/master/Images/Brain_Figure.png" alt="drawing" width="400"/>
 </p>
