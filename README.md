@@ -59,3 +59,8 @@ function [r2simg,r2img] = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname
 end
 
 ```
+
+**Results of a Successful fit**
+<p align="center">
+  <img src="https://github.com/nicksisco1932/The_MRI_toolbox/blob/master/Images/MR_logo_big.png" alt="drawing" width="400"/>
+</p>
