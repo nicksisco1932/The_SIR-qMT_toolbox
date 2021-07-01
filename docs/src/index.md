@@ -1,4 +1,4 @@
-# DEcomposition and Component Analysis of Exponential Signals (DECAES)
+# The MRI Toolbox Documentation
 
 ## Table of contents
 
