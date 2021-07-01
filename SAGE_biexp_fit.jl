@@ -221,8 +221,8 @@ function main()
     tmp2 = voxel_size(d.header)[2]
     tmp3 = voxel_size(d.header)[3]
 
-    R2s_fname = @sprintf("%sSAGE_R2s_Brain_julia.nii.gz",base)
-    R2_fname = @sprintf("%sSAGE_R2_Brain_julia.nii.gz",base)
+    R2s_fname = @sprintf("%s/SAGE_R2s_Brain_julia.nii.gz",base)
+    R2_fname = @sprintf("%s/SAGE_R2_Brain_julia.nii.gz",base)
     niwrite(R2s_fname,NIVolume(R2s;voxel_size=(tmp1,tmp2,tmp3)))
     niwrite(R2_fname,NIVolume(R2;voxel_size=(tmp1,tmp2,tmp3)))
 
