@@ -65,7 +65,7 @@ function commandline()
     settings = ArgParseSettings()
 
     @add_arg_table! settings begin
-        "TE_nii_1"
+        "MFA_nii"
         required = true
         "nii_brainMask"
         required = false
