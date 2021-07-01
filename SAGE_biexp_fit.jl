@@ -151,7 +151,8 @@ function main()
 
 
     base = dirname(a["TE_nii_1"])
-    paths = [joinpath(base,basename(a["TE_nii_1"])),
+    paths = [
+        joinpath(base,basename(a["TE_nii_1"])),
         joinpath(base,basename(a["TE_nii_2"])),
         joinpath(base,basename(a["TE_nii_3"])),
         joinpath(base,basename(a["TE_nii_4"])),
@@ -161,15 +162,21 @@ function main()
 
     DATA,MASK,nx,ny,nz,ne,nt=load_sage_data(paths,b_fname);
     tot_voxels = nx*ny*nz
+    
     vec_mask = reshape(MASK[:,:,:,1,1],tot_voxels,1);
+    
+    # MASK = Array{Bool}(niread(b_fname))
+    # MASK = MASK.raw
+    # vec_mask = reshape(MASK,tot_voxels,1)
+    
 
     vec_data = reshape(DATA,tot_voxels,ne,nt)
 
-    te1=0.007653;
-    te2=0.027969;
-    te3=0.059074;
-    te4=0.07939;
-    te5=0.099706;
+    te1=0.00782;
+    te2=0.028769;
+    te3=0.060674;
+    te4=0.081622;
+    te5=0.102571;
     echos=Vector{Float64}([te1,te2,te3,te4,te5])
     TR = 1800/1000;
 
@@ -189,8 +196,10 @@ function main()
     @time for JJ=1:nt;
         temp = vec_data[:,:,JJ]
         tempFit_data = fitdata[:,:,JJ]
-        
-        @time fitdata[:,:,JJ] = work(IND,SAGE_biexp3p_d,echos,temp,X0,tempFit_data)
+        try
+            @time fitdata[:,:,JJ] = work(IND,SAGE_biexp3p_d,echos,temp,X0,tempFit_data)
+        catch
+        end
         println("Done with Fit $JJ of $nt")
     end
     #-------------------------------------  
