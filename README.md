@@ -4,7 +4,7 @@
   <img src="https://github.com/nicksisco1932/The_MRI_toolbox/blob/master/Images/MR_logo_big.png" alt="drawing" width="400"/>
 </p>
 
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://nicksisco1932.github.io/The_MRI_toolbox/dev)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://nicksisco1932.github.io/The_MRI_toolbox/root)
 
 Welcome to the magnetic resonance toolbox. This is intended to become a repository for magnetic resonance imaging processing pipelines that do not already have dedicated and extensive software written. The main pipelines shown here are for processing quantitative magnetization transfer imaging using selective inversion recovery (SIR-qMT), spin- and gradient-echo non-linear fitting (SAGE), and multi-flip angle (MFA) T1 maps. All the fitting is implemented using Julia, which is computationally fast but still readable.
 
