@@ -97,9 +97,9 @@ function main()
         NO_MASK = true
     end
 
-    b_fname = joinpath(base,basename(a["nii_brainMask"]))
-    
-    DATA,MASK,nx,ny,nz,nt=load_data(paths,b_fname);
+    b_fname = joinpath(base,basename(a["MFA_nii"]))
+    paths = a["MFA_nii"]
+    # DATA,MASK,nx,ny,nz,nt=load_data(paths,b_fname);
 
     data1 = niread(paths[1]);
     
