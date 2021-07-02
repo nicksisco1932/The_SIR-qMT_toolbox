@@ -130,7 +130,7 @@ a = commandline()
 
 function optim_fitty(f::Function, xdata::Vector{Float64},data::Vector{Float64},x0::Vector{Float64})
     # fitdata = Optim.minimizer( optimize(b -> sqerrorSAGE(b, xdata,  data), x0))
-    fitdata = curve_fit(f,xdata,data,x0;autodiff=:finiteforward) # this is faster and has good results
+    fitdata = curve_fit(f,xdata,data,x0) # this is faster and has good results
     return fitdata
 end
 
@@ -138,9 +138,10 @@ function work(IND::Vector{Int64},f::Function,echos::Vector{Float64},vec_data::Ar
     # Threads.@threads for ii in IND # surprisingly, threads is not faster
     for ii in IND
         temp = vec_data[ii,:];
-        fitY = optim_fitty(f, echos, temp, X0)
-        # fitY = optim_fitty(echos, temp, X0)
-        fitdata[ii,:] = fitY.param
+        fitY = optim_fitty(f, echos, temp, X0);fitdata[ii,:] = fitY.param
+        # fitY = optim_fitty(echos, temp, X0);fitdata[ii,:] = fitY
+        
+        
     end
     
     return fitdata
@@ -180,7 +181,7 @@ function main()
     echos=Vector{Float64}([te1,te2,te3,te4,te5])
     TR = 1800/1000;
 
-    X0=[1,100.0,50,1]
+    X0=[1000,100.0,50,100]
     IND=findall(x->x.>0,vec_mask[:,1]);
 
 
@@ -196,10 +197,8 @@ function main()
     @time for JJ=1:nt;
         temp = vec_data[:,:,JJ]
         tempFit_data = fitdata[:,:,JJ]
-        try
-            @time fitdata[:,:,JJ] = work(IND,SAGE_biexp3p_d,echos,temp,X0,tempFit_data)
-        catch
-        end
+        @time fitdata[:,:,JJ] = work(IND,SAGE_biexp3p_d,echos,temp,X0,tempFit_data)
+        
         println("Done with Fit $JJ of $nt")
     end
     #-------------------------------------  
