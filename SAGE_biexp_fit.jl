@@ -115,6 +115,16 @@ function commandline()
         required = true
         "SAGE_nii_brainMask"
         required = true
+        "TE1"
+        required = true
+        "TE2"
+        required = true
+        "TE3"
+        required = true
+        "TE4"
+        required = true
+        "TE5"
+        required = true
     end
 
     println(parse_args(settings))
@@ -173,12 +183,23 @@ function main()
 
     vec_data = reshape(DATA,tot_voxels,ne,nt)
 
-    te1=0.00782;
-    te2=0.028769;
-    te3=0.060674;
-    te4=0.081622;
-    te5=0.102571;
+
+
+    # te1=0.00782;
+    # te2=0.028769;
+    # te3=0.060674;
+    # te4=0.081622;
+    # te5=0.102571;
+    # echos=Vector{Float64}([te1,te2,te3,te4,te5])
+    
+    te1=parse(Float64,a["TE1"])
+    te2=parse(Float64,a["TE2"])
+    te3=parse(Float64,a["TE3"])
+    te4=parse(Float64,a["TE4"])
+    te5=parse(Float64,a["TE5"])
     echos=Vector{Float64}([te1,te2,te3,te4,te5])
+
+    # echos=Vector{Float64}()
     TR = 1800/1000;
 
     X0=[1000,100.0,50,100]
