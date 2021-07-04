@@ -67,6 +67,3 @@ end
 </p>
 Representative SIR-qMT on a healthy volunteer. A represents the first data point corresponding to t<sub>I</sub>,t<sub>D</sub> = 278,2730 ms. B, C, and D are maps from the fit parameters pool size ratio, R<sub>1f</sub>, and S<sub>f</sub> (B<sub>1</sub> inhomogeneity), respectively. These images are consistent with published parameters, white matter have the highest relative PSR and R<sub>1f</sub>, while S<sub>f</sub> remains relatively flat at 3T with slight increases near the posterior of this map.
 
-<p align="center">
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;c^2=a^2+b^2" title="\Large c^2=a^2+b^2" />
-</p>
