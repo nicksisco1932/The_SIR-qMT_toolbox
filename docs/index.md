@@ -11,3 +11,11 @@ As of 20210701, it is just getting off the ground. Improvements will include doc
 ```math
 a^2 + b^2 = c^2
 ```
+
+```mermaid
+graph TD;
+  A-->B;
+  A-->C;
+  B-->D;
+  C-->D;
+```
