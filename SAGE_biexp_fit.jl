@@ -243,11 +243,19 @@ function main()
 
     R2s_fname = @sprintf("%s/SAGE_R2s_Brain_julia.nii.gz",base)
     R2_fname = @sprintf("%s/SAGE_R2_Brain_julia.nii.gz",base)
-    niwrite(R2s_fname,NIVolume(R2s;voxel_size=(tmp1,tmp2,tmp3)))
-    niwrite(R2_fname,NIVolume(R2;voxel_size=(tmp1,tmp2,tmp3)))
+    temp1 = NIVolume(R2s;voxel_size=(tmp1,tmp2,tmp3))
+    niwrite(R2s_fname,temp1)
+    temp2 = NIVolume(R2;voxel_size=(tmp1,tmp2,tmp3))
+    niwrite(R2_fname,temp2)
 
     println("The R2s is saved at $R2s_fname")
     println("The R2 is saved at $R2_fname")
+
+    for ii in 1:ne
+        temp = NIVolume(DATA[:,:,:,ii,:];voxel_size=(tmp1,tmp2,tmp3))
+        fname = @sprintf("%s/Input_%s.nii.gz",base,ii)
+        niwrite(fname, temp)
+    end
 
 
 end
