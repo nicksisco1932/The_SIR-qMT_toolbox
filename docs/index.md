@@ -8,6 +8,9 @@ This is toolbox for qunatitative MRI processing. It is intended as a one stop sh
 
 As of 20210701, it is just getting off the ground. Improvements will include documented pages for each method used here. There will be MATLAB, Julia, Python, and R code that will be used for fitting and analysis.
 
+## Work in progress
+
+Temp math
 <p align="center">
 <img src="https://latex.codecogs.com/svg.latex?\Large&space;c^2=a^2+b^2" title="\Large c^2=a^2+b^2" />
 </p>
