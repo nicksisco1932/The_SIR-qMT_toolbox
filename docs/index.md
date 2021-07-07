@@ -12,5 +12,5 @@ As of 20210701, it is just getting off the ground. Improvements will include doc
 
 Temp math
 <p align="center">
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;c^2=a^2+b^2" title="\Large c^2=a^2+b^2" />
+<img src="https://latex.codecogs.com/svg.latex?\Large&space;e^2=a^2+b^2" title="\Large c^2=a^2+b^2" />
 </p>
