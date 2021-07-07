@@ -24,3 +24,6 @@ and
 <p align="center">
 <a href="https://www.codecogs.com/eqnedit.php?latex=b_f^\pm=\pm\frac{\begin{bmatrix}\frac{M_f(0)}{M_{0f}}-1\end{bmatrix}(R_1^--R_1^\pm)&plus;\begin{bmatrix}\frac{M_f(0)-M_m(0)}{M_{0f}-M_{0f}}\end{bmatrix}k_{fm}}{R_1^&plus;-R_1^-}" target="_blank"><img src="https://latex.codecogs.com/svg.latex?b_f^\pm=\pm\frac{\begin{bmatrix}\frac{M_f(0)}{M_{0f}}-1\end{bmatrix}(R_1^--R_1^\pm)&plus;\begin{bmatrix}\frac{M_f(0)-M_m(0)}{M_{0f}-M_{0f}}\end{bmatrix}k_{fm}}{R_1^&plus;-R_1^-}" title="\Equation 3" /></a>
 </p>
+
+## Notes on markdown.
+To embed math, easiest to go to this website. https://www.codecogs.com/latex/eqneditor.php
