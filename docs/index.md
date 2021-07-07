@@ -22,5 +22,5 @@ Temp math
 and
 
 <p align="center">
-<img src="https://latex.codecogs.com/svg.latex?\space\b_f^\pm=\pm\frac{[\frac{s_fM_f(0^-)}{M_{f\infty}}-1](R_{1f}-R_1^\pm)+[\frac{S_fM_f(0^-)}{M_{f\infty}}-\frac{S_mM_m(0^-)}{M_{m\infty}}]k_{fm}}{R_1^+-R_1^-}" title="\Equation 3" />
+<a href="https://www.codecogs.com/eqnedit.php?latex=b_f^\pm=\pm\frac{\begin{bmatrix}\frac{M_f(0)}{M_{0f}}-1\end{bmatrix}(R_1^--R_1^\pm)&plus;\begin{bmatrix}\frac{M_f(0)-M_m(0)}{M_{0f}-M_{0f}}\end{bmatrix}k_{fm}}{R_1^&plus;-R_1^-}" target="_blank"><img src="https://latex.codecogs.com/svg.latex?b_f^\pm=\pm\frac{\begin{bmatrix}\frac{M_f(0)}{M_{0f}}-1\end{bmatrix}(R_1^--R_1^\pm)&plus;\begin{bmatrix}\frac{M_f(0)-M_m(0)}{M_{0f}-M_{0f}}\end{bmatrix}k_{fm}}{R_1^&plus;-R_1^-}" title="\Equation 3" /></a>
 </p>
