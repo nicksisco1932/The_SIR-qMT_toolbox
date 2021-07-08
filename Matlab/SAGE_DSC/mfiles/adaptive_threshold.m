@@ -1,9 +1,10 @@
 function [threshold] = adaptive_threshold(DSC,filtered_image,prebolus_signal)
     %% Adaptive Threshold
-    Smin = squeeze(nanmin(filtered_image(:,:,:,:,DSC.Parms.ss_tp:DSC.Parms.gd_tp+40),[],5)); %find min signal (including during bolus passage)
-    prebolus_std = squeeze(nanstd(filtered_image(:,:,:,:,DSC.Parms.ss_tp:DSC.Parms.gd_tp),[],5)); %find prebolus standard deviation
+    Smin = squeeze(nanmin(filtered_image(:,:,:,2,DSC.Parms.ss_tp:DSC.Parms.gd_tp+40),[],5)); %find min signal (including during bolus passage)
+    prebolus_std = squeeze(nanstd(filtered_image(:,:,:,2,DSC.Parms.ss_tp:DSC.Parms.gd_tp),[],5)); %find prebolus standard deviation
     % % SNRc(j,k)=(S0_TE2/std0_TE2)*(Smin/S0_TE2)*log(S0_TE2/Smin);
-    SNRc2 = squeeze((prebolus_signal./prebolus_std).*(Smin./prebolus_signal).*log(prebolus_signal./Smin));
+%     SNRc2 = squeeze((prebolus_signal./prebolus_std).*(Smin./prebolus_signal).*log(prebolus_signal./Smin));
+    SNRc2 = squeeze((prebolus_signal(:,:,:,2)./prebolus_std).*(Smin./prebolus_signal(:,:,:,2)).*log(prebolus_signal(:,:,:,2)./Smin));
     SNRc2(isnan(SNRc2)) = 0;
     C1 = SNRc2;
     C2 = SNRc2;
