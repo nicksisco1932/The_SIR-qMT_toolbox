@@ -47,7 +47,7 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(t
 
     %%
     volterra = 1;
-    if volterra
+    if volterra==0
         [dR2star_all,dR2star_SE,CTC_all,CTC_SE] = linearizing_data(DSC,filtered_image,brain_img);
     else
         [dR2star_all,dR2star_SE,~,~] = linearizing_data(DSC,filtered_image,brain_img);
@@ -61,7 +61,7 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(t
 
     %% CBF
 
-    if volterra
+    if volterra==0
         [S_orig,maxS,U,S,V,AIFmatrixt,dtemp_all,dtemp_allSE] = aif_processing(DSC,dR2star_all,dR2star_SE,tidx);
         %--------------------------
         [CBF_map,CBFSE_map] = CBF_calc(dtemp_all,dtemp_allSE,DSC,U,S,V,maxS,S_orig,brain_img,threshold);
