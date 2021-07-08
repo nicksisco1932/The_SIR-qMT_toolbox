@@ -1,4 +1,4 @@
-function [CBF_map,CBFSE_map] = CBF_calc_volterra(DSC,brain_img,threshold,CTC_all,CTC_SE)
+function [CBF_map,CBFSE_map] = CBF_calc_block_circulant(DSC,brain_img,threshold,CTC_all,CTC_SE)
     disp('Doing Standard cSVD AKA: Block Circulant, depending where it is cited.')
 
     % Block Circulant
