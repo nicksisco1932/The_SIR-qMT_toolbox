@@ -1,4 +1,4 @@
-function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns(temp,index)
+function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(temp,index)
 
     fname = fullfile(temp,sprintf("PT1319%03i_TE%s_img_w_Skull.nii.gz",index,num2str(1)));
     info = niftiinfo(fname);
@@ -46,7 +46,12 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns(temp,i
     DSC.AIF = AutoAIF_Brain(filtered_image(:,:,:,1:2,:),[DSC.Parms.TR DSC.Parms.TE1 DSC.Parms.TE2],DSC.Parms.flip,0,1,double(brain_img),DSC.Parms.ss_tp,DSC.Parms.gd_tp,DSC.Parms.pk_tp);
 
     %%
-    [dR2star_all,dR2star_SE] = linearizing_data(DSC,filtered_image,brain_img);
+    volterra = 0
+    if volterra
+        [dR2star_all,dR2star_SE,CTC_all,CTC_SE] = linearizing_data(DSC,filtered_image,brain_img);
+    else
+        [dR2star_all,dR2star_SE,~,~] = linearizing_data(DSC,filtered_image,brain_img);
+    end
     %% CBV
     %--------------------------
     [CBV_all,CBV_SE,tidx] = CBV_calc(DSC,dR2star_all,dR2star_SE,brain_img);
@@ -56,7 +61,11 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns(temp,i
 
     %% CBF
 
-    [S_orig,maxS,U,S,V,AIFmatrixt,dtemp_all,dtemp_allSE] = aif_processing(DSC,dR2star_all,dR2star_SE,tidx);
+    if volterra
+        [S_orig,maxS,U,S,V,AIFmatrixt,dtemp_all,dtemp_allSE] = aif_processing(DSC,dR2star_all,dR2star_SE,tidx);
+    else
+        [CBF_map,CBFSE_map] = CBF_calc_volterra(DSC,brain_img,threshold)
+    end
 
     %--------------------------
     [CBF_map,CBFSE_map] = CBF_calc(dtemp_all,dtemp_allSE,DSC,U,S,V,maxS,S_orig,brain_img,threshold);
