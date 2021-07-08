@@ -35,4 +35,7 @@ function [CBV_all,CBV_SE,tidx] = CBV_calc(DSC,dR2star_all,dR2star_SE,brain_img)
     CBV_SE = squeeze(trapz(temp,4))./trapz(AIF(tidx));
     CBV_SE(~isfinite(CBV_SE)) = 0;
     CBV_SE(~ind) = 0;
+    
+    CBV_all = brain_img.*CBV_all;
+    CBV_SE = brain_img.*CBV_SE;
 end

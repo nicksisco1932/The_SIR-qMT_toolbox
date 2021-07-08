@@ -34,5 +34,38 @@ for index=1:ptnums(end)
     %%
     % if you want to use Volterra, put a 1 in the flag spot
     [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(base_path,index,1);
-
+    
 end
+
+%%
+MTT(MTT>100)=0;
+MTT_SE(MTT_SE>100)=0;
+close all
+for ii = 1:DSC.Parms.nz
+    subplot(2,1,1)
+    imagesc(permute(MTT(:,:,ii),[2 1 3] ));colorbar
+    subplot(2,1,2)
+    imagesc(permute(MTT_SE(:,:,ii),[2 1 3] ));colorbar
+    pause(0.1)
+end
+
+for ii = 1:DSC.Parms.nz
+    subplot(2,1,1)
+    imagesc(permute(CBV_all(:,:,ii),[2 1 3] ));colorbar
+    subplot(2,1,2)
+    imagesc(permute(CBV_SE(:,:,ii),[2 1 3] ));colorbar
+    pause(0.1)
+end
+
+for ii = 1:DSC.Parms.nz
+    subplot(2,1,1)
+    imagesc(permute(CBF_map(:,:,ii),[2 1 3] ));colorbar
+    subplot(2,1,2)
+    imagesc(permute(CBFSE_map(:,:,ii),[2 1 3] ));colorbar
+    pause(0.1)
+end
+
+subplot(2,1,1)
+imagesc(permute(MTT(:,:,8),[2 1 3] ));colorbar
+subplot(2,1,2)
+imagesc(permute(MTT_SE(:,:,8),[2 1 3] ));colorbar
