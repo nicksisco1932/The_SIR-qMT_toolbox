@@ -2,8 +2,6 @@ function [CBV_all,CBV_SE,tidx] = CBV_calc(DSC,dR2star_all,dR2star_SE,brain_img)
     TR = DSC.Parms.TR;
     aif = DSC.AIF(2,:);
 
-    % AIF = aif.fit.gv; % if run by DSC toolbox
-
     a1=0.493;
     a2=2.62;
     htcvar=1.1378*(0.4)/(1-0.4)^2; % 3T

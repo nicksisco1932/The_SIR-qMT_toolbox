@@ -33,9 +33,9 @@ end
 for index=73
     %%
     % if you want to use Volterra, put a 1 in the flag spot
-%     [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(base_path,index,0);
+    [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(base_path,index,0);
+    
     [DSC_volterra,CBF_map_volterra,CBFSE_map_volterra,CBV_all_volterra,CBV_SE_volterra,MTT_volterra,MTT_SE_volterra] = sage_proc_ns_func(base_path,index,1);
-    [DSC_block,CBF_map_block,CBFSE_map_block,CBV_all_block,CBV_SE_block,MTT_block,MTT_SE_block] = sage_proc_ns_func(base_path,index,2);
     
 end
 %%
@@ -91,34 +91,34 @@ imagesc(permute(MTT_SE(:,:,8),[2 1 3] ));colorbar
 
 %%
 
-temp1 = (MTT);
-temp2 = (MTT_SE);
-temp3 = (mtt_outlier);
-temp4 = (mtt_se_outlier);
-base='C:\Users\nicks\Documents\MRI_data\SAGE\AIF_optimizations\';
-save(sprintf('%sMTT.mat',base),'temp1','-v6')
-save(sprintf('%sMTTSE.mat',base),'temp2','-v6')
-save(sprintf('%sMTT_rm_out.mat',base),'temp3','-v6')
-save(sprintf('%sMTTSE_rm_out.mat',base),'temp4','-v6')
+temp1 = nonzeros(MTT);
+temp2 = nonzeros(MTT_SE);
+temp3 = nonzeros(mtt_outlier);
+temp4 = nonzeros(mtt_se_outlier);
+base='C:\Users\nicks\Documents\MRI_data\SAGE\AIF_optimizations'
+save(sprintf('%sMTT.mat','temp1','-v6',base))
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\MTTSE.mat','temp2','-v6',base))
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\MTT_rm_out.mat','temp3','-v6',base))
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\MTTSE_rm_out.mat','temp4','-v6',base))
 
-temp1 = (CBF_map);
-temp2 = (CBFSE_map);
-temp3 = (CBF_outlier);
-temp4 = (CBF_se_outlier);
+temp1 = nonzeros(CBF_map);
+temp2 = nonzeros(CBFSE_map);
+temp3 = nonzeros(CBF_outlier);
+temp4 = nonzeros(CBF_se_outlier);
 
-save(sprintf('%sCBF.mat',base),'temp1','-v6')
-save(sprintf('%sCBFSE.mat',base),'temp2','-v6')
-save(sprintf('%sCBF_rm_out.mat',base),'temp3','-v6')
-save(sprintf('%sCBFSE_rm_out.mat',base),'temp4','-v6')
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\CBF.mat','temp1','-v6',base))
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\CBFSE.mat','temp2','-v6',base))
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\CBF_rm_out.mat','temp3','-v6',base))
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\CBFSE_rm_out.mat','temp4','-v6',base))
 
-temp1 = (CBV_all);
-temp2 = (CBV_SE);
-temp3 = (CBV_outlier);
-temp4 = (CBV_se_outlier);
+temp1 = nonzeros(CBV_all);
+temp2 = nonzeros(CBV_SE);
+temp3 = nonzeros(CBV_outlier);
+temp4 = nonzeros(CBV_se_outlier);
 
-save(sprintf('%sCBV.mat',base),'temp1','-v6')
-save(sprintf('%sCBVSE.mat',base),'temp2','-v6')
-save(sprintf('%sCBV_rm_out.mat',base),'temp3','-v6')
-save(sprintf('%sCBVSE_rm_out.mat',base),'temp4','-v6')
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\CBV.mat','temp1','-v6',base))
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\CBVSE.mat','temp2','-v6',base))
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\CBV_rm_out.mat','temp3','-v6',base))
+save('C:\Users\nicks\Documents\MRI_data\SAGE\remove_outlier\CBVSE_rm_out.mat','temp4','-v6',base))
 
 
