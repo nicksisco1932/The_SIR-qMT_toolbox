@@ -1,24 +1,29 @@
-function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(temp,index,FLAG)
+function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(temp,index)
 %     Author: Nicholas J. Sisco, Ph.D. 
 %     Email: X@barrowneuro.org where X = nicholas.sisco
 %     Affiliation: Barrow Neurological Institue in Phoenix, AZ
 %     Title: Processing script for Dynamic Susceptibility Contrast
-%               -specifically for multiecho. Many other programs can do
-%               single echo
 %
 %     Requirements:
 %    AutoAIF_Brain.m       
-%    CBF_calc_volterra.m   
-%    adaptive_threshold.m  
-%    circulant.m           
-%    loader.m
-%    CBF_calc.m
-%    CBV_calc.m
-%    aif_processing.m
-%    linearizing_data.m
-%    sage_proc_ns_func.m 
+    %    CBF_calc_volterra.m   
+    %    adaptive_threshold.m  
+    %    circulant.m           
+    %    loader.m
+    %    CBF_calc.m
+    %    CBV_calc.m
+    %    aif_processing.m
+    %    linearizing_data.m
+    %    sage_proc_ns_func.m 
+%     Input and Output Parameters for Code
+%     utils.jl needs to be in the same directory as this script
+%     User supplied data:
+%         - Command line usage
+%         $ julia -t <threads #> ./SIR_fit.jl <path to Python processed data>
+%         - In the Python processed directory, there should be nt number of preprocessed nifti files, corresponding 
+%         to the number of dynamic time points in the data, e.g. nt = 4 means there are ti = [15,15,...,...], etc.
 %     Output:
-%         - The output from this script are CBF,CBV,MTT for SAGE. 
+%         - The output from this script are three nifti files for the fitting parameters pool size ratio, R1f (free transverse relaxation rate), and Sf (field inhomogeneity)
 
     
     fname = fullfile(temp,sprintf("PT1319%03i_TE%s_img_w_Skull.nii.gz",index,num2str(1)));
@@ -67,12 +72,7 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(t
     DSC.AIF = AutoAIF_Brain(filtered_image(:,:,:,1:2,:),[DSC.Parms.TR DSC.Parms.TE1 DSC.Parms.TE2],DSC.Parms.flip,0,1,double(brain_img),DSC.Parms.ss_tp,DSC.Parms.gd_tp,DSC.Parms.pk_tp);
 
     %%
-    if FLAG==1
-        volterra=1;
-    else
-        volterra=0;
-    end
-    
+    volterra = 1;
     if volterra==1
         [dR2star_all,dR2star_SE,CTC_all,CTC_SE] = linearizing_data(DSC,filtered_image,brain_img);
     else
@@ -98,12 +98,7 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(t
     end
 
     
-    ind = find(brain_img);
-    MTT = CBV_all./CBF_map;
-    MTT(~ind)=0;
-    MTT(isinf(MTT))=0;
-    MTT_SE = CBV_SE./CBFSE_map;
-    MTT_SE(~ind)=0;
-    MTT_SE(isinf(MTT_SE))=0;
     
+    MTT = CBV_all./CBF_map;
+    MTT_SE = CBV_SE./CBFSE_map;
 end

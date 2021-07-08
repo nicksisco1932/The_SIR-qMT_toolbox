@@ -16,8 +16,6 @@ addpath(genpath('./mfiles/'))
 % ptnums=1:100; %does not matter, keep the range
 ptnums=1; %does not matter, keep the range
 
-
-
 temp = uigetdir("C:\Users\nicks\Documents\GitHub\DSC_SAGE_python\");
 out_path = "C:\Users\nicks\Documents\MRI_data\SAGE\DSC_standard_proc\";
 
@@ -34,6 +32,7 @@ end
 %%
 for index=1:ptnums(end)
     %%
-    [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(base_path,index);
+    % if you want to use Volterra, put a 1 in the flag spot
+    [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(base_path,index,1);
 
 end

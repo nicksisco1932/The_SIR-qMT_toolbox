@@ -1,5 +1,14 @@
-function [CBF_map,CBFSE_map] = CBF_calc_volterra(DSC,brain_img,threshold)
-        
+function [CBF_map,CBFSE_map] = CBF_calc_volterra(DSC,brain_img,threshold,CTC_all,CTC_SE)
+    
+
+    
+    ind=find(brain_img);
+    nx=DSC.Parms.nx;
+    ny=DSC.Parms.ny;
+    nz=DSC.Parms.nz;
+    ne=DSC.Parms.ne;
+    nt=DSC.Parms.nt;
+    TR = DSC.Parms.TR;
     %--------------------
     DeltaT = DSC.Parms.TR; % sampling interval
     
