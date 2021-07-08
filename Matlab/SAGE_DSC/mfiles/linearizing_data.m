@@ -1,4 +1,4 @@
-function [dR2star_all,dR2star_SE] = linearizing_data(DSC,filtered_image,brain_img)
+function [dR2star_all,dR2star_SE,CTC_all,CTC_SE] = linearizing_data(DSC,filtered_image,brain_img)
 
     ss_tp = DSC.Parms.ss_tp;
     gd_tp = DSC.Parms.gd_tp;
@@ -40,5 +40,5 @@ function [dR2star_all,dR2star_SE] = linearizing_data(DSC,filtered_image,brain_im
     dR2star_all(ind)=0;
     dR2star_SE(ind)=0;
 
-    clear STE1 STE2 STE0 STE0_fraction STE5 STE1_pre STE2_pre CTC_all CTC_SE
+    clear STE1 STE2 STE0 STE0_fraction STE5 STE1_pre STE2_pre 
 end
