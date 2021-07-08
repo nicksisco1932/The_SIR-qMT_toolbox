@@ -67,31 +67,23 @@ function [CBF_map,CBFSE_map] = CBF_calc_volterra(DSC,brain_img,threshold,CTC_all
                     % Apply adaptive threshold
                     S = S_orig;
                     adapt_thresh = threshold(i,j,k)*maxS;
-
-
+                    %Computes the inverted DeltaR2star values for the AIF
                     eigenV=diag(S);
-
-                    newEigen(eigenV<adapt_thresh) = 0;
-
+                    eigenV(eigenV<adapt_thresh)=0;
+                    %                 newEigen=eigenV;
+                    newEigen=eigenV.^-1;
+                    newEigen(isinf(newEigen))=0;
                     Ginv=V*diag(newEigen)*(U'); % the second diagonal puts the eiganvector back into a mxn matrix
-
                     vettConc=zeros(nTpad,1);
-
-                    vettConc(1:nt)=squeeze(CTC_all(i,j,k,1:nt));
-                    vettConc(nTpad+1:nTpad)=0;
+                    vettConc(1:nt)=reshape(CTC_all(i,j,k,:),nt,1);
                     vettRes=(1/TR)*Ginv*vettConc;
                     CBF_map(i,j,k)=max(abs(vettRes));
                     residual_cbf(i,j,k,:)=vettRes;
-
                     vettConc=zeros(nTpad,1);
-
-                    vettConc(1:nt)=squeeze(CTC_SE(i,j,k,1:nt));
-                    vettConc(nTpad+1:nTpad)=0;
+                    vettConc(1:nt)=reshape(CTC_SE(i,j,k,:),nt,1);
                     vettRes=(1/TR)*Ginv*vettConc;
                     CBFSE_map(i,j,k)=max(abs(vettRes));
                     residual_cbfse(i,j,k,:)=vettRes;
-
-
                 end
             end
         end
@@ -102,7 +94,7 @@ function [CBF_map,CBFSE_map] = CBF_calc_volterra(DSC,brain_img,threshold,CTC_all
 
     CBF_map(isnan(CBF_map))=0;
     CBF_map(isinf(CBF_map))=0;
-    CBFSE_map(~ind)=0;
+    
     CBFSE_map(isnan(CBFSE_map))=0;
     CBFSE_map(isinf(CBFSE_map))=0;
     

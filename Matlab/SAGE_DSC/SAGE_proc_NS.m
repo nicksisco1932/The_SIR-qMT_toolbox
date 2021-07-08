@@ -34,18 +34,39 @@ for index=73
     %%
     % if you want to use Volterra, put a 1 in the flag spot
 %     [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(base_path,index,0);
-    [DSC_volterra,CBF_map_volterra,CBFSE_map_volterra,CBV_all_volterra,CBV_SE_volterra,MTT_volterra,MTT_SE_volterra] = sage_proc_ns_func(base_path,index,1);
+%     [DSC_volterra,CBF_map_volterra,CBFSE_map_volterra,CBV_all_volterra,CBV_SE_volterra,MTT_volterra,MTT_SE_volterra] = sage_proc_ns_func(base_path,index,1);
     [DSC_block,CBF_map_block,CBFSE_map_block,CBV_all_block,CBV_SE_block,MTT_block,MTT_SE_block] = sage_proc_ns_func(base_path,index,2);
     
 end
 %%
-kernel=5;
-CBF_outlier = removeOutlierVolume(CBF_map,2,kernel);
-CBF_se_outlier = removeOutlierVolume(CBFSE_map,2,kernel);
-CBV_outlier = removeOutlierVolume(CBV_all,2,kernel);
-CBV_se_outlier = removeOutlierVolume(CBV_SE,2,kernel);
-mtt_outlier = removeOutlierVolume(MTT,2,kernel);
-mtt_se_outlier = removeOutlierVolume(MTT_SE,2,kernel);
+CBV_all(CBV_all>100)=0;
+CBV_all_volterra(CBV_all_volterra>100)=0;
+CBV_all_block(CBV_all_block>100)=0;
+CBV_SE(CBV_SE>100)=0;
+CBV_SE_volterra(CBV_SE_volterra>100)=0;
+CBV_SE_block(CBV_SE_block>100)=0;
+
+CBF_map(CBF_map>1000)=0;
+CBF_map_volterra(CBF_map_volterra>1000)=0;
+CBF_map_block(CBF_map_block>1000)=0;
+CBFSE_map(CBFSE_map>1000)=0;
+CBFSE_map_volterra(CBFSE_map_volterra>1000)=0;
+CBFSE_map_block(CBFSE_map_block>1000)=0;
+
+MTT(MTT>100)=0;
+MTT_volterra(MTT_volterra>100)=0;
+MTT_block(MTT_block>100)=0;
+MTT_SE(MTT_SE>100)=0;
+MTT_SE_volterra(MTT_SE_volterra>100)=0;
+MTT_SE_block(MTT_SE_block>100)=0;
+
+kernel=[5 5 5];
+CBF_map = removeOutlierVolume(CBF_map,2,kernel);
+CBFSE_map = removeOutlierVolume(CBFSE_map,2,kernel);
+CBV_all = removeOutlierVolume(CBV_all,2,kernel);
+CBV_SE = removeOutlierVolume(CBV_SE,2,kernel);
+MTT = removeOutlierVolume(MTT,2,kernel);
+MTT_SE = removeOutlierVolume(MTT_SE,2,kernel);
 
 
 CBF_outlier_volterra = removeOutlierVolume(CBF_map_volterra,2,kernel);
@@ -57,68 +78,71 @@ mtt_se_outlier_volterra = removeOutlierVolume(MTT_SE_volterra,2,kernel);
 
 
 %%
-% MTT(MTT>100)=0;
-% MTT_SE(MTT_SE>100)=0;
+
 close all
-for ii = 1:DSC.Parms.nz
-    subplot(2,1,1)
-    imagesc(permute(MTT(:,:,ii),[2 1 3] ));colorbar
-    subplot(2,1,2)
-    imagesc(permute(MTT_SE(:,:,ii),[2 1 3] ));colorbar
-    pause(0.1)
-end
+% for ii = 1:DSC.Parms.nz
+%     subplot(2,1,1)
+%     imagesc(permute(MTT(:,:,ii),[2 1 3] ));colorbar
+%     subplot(2,1,2)
+%     imagesc(permute(MTT_SE(:,:,ii),[2 1 3] ));colorbar
+%     pause(0.1)
+% end
+% 
+% for ii = 1:DSC.Parms.nz
+%     subplot(2,1,1)
+%     imagesc(permute(CBV_all(:,:,ii),[2 1 3] ));colorbar
+%     subplot(2,1,2)
+%     imagesc(permute(CBV_SE(:,:,ii),[2 1 3] ));colorbar
+%     pause(0.1)
+% end
+% 
+% for ii = 1:DSC.Parms.nz
+%     subplot(2,1,1)
+%     imagesc(permute(CBF_map(:,:,ii),[2 1 3] ));colorbar
+%     subplot(2,1,2)
+%     imagesc(permute(CBFSE_map(:,:,ii),[2 1 3] ));colorbar
+%     pause(0.1)
+% end
 
-for ii = 1:DSC.Parms.nz
-    subplot(2,1,1)
-    imagesc(permute(CBV_all(:,:,ii),[2 1 3] ));colorbar
-    subplot(2,1,2)
-    imagesc(permute(CBV_SE(:,:,ii),[2 1 3] ));colorbar
-    pause(0.1)
-end
-
-for ii = 1:DSC.Parms.nz
-    subplot(2,1,1)
-    imagesc(permute(CBF_map(:,:,ii),[2 1 3] ));colorbar
-    subplot(2,1,2)
-    imagesc(permute(CBFSE_map(:,:,ii),[2 1 3] ));colorbar
-    pause(0.1)
-end
-
-subplot(2,1,1)
-imagesc(permute(MTT(:,:,8),[2 1 3] ));colorbar
-subplot(2,1,2)
-imagesc(permute(MTT_SE(:,:,8),[2 1 3] ));colorbar
+subplot(2,2,1)
+imagesc(permute(CBF_map_volterra(:,:,8),[2 1 3] ));colorbar
+subplot(2,2,2)
+imagesc(permute(CBFSE_map_volterra(:,:,8),[2 1 3] ));colorbar
+subplot(2,2,3)
+imagesc(permute(CBF_map_block(:,:,8),[2 1 3] ));colorbar
+subplot(2,2,4)
+imagesc(permute(CBFSE_map_block(:,:,8),[2 1 3] ));colorbar
 
 %%
 
-temp1 = (MTT);
-temp2 = (MTT_SE);
-temp3 = (mtt_outlier);
-temp4 = (mtt_se_outlier);
+temp1 = (MTT_volterra);
+temp2 = (MTT_SE_volterra);
+temp3 = (MTT_block);
+temp4 = (MTT_SE_volterra);
 base='C:\Users\nicks\Documents\MRI_data\SAGE\AIF_optimizations\';
-save(sprintf('%sMTT.mat',base),'temp1','-v6')
-save(sprintf('%sMTTSE.mat',base),'temp2','-v6')
-save(sprintf('%sMTT_rm_out.mat',base),'temp3','-v6')
-save(sprintf('%sMTTSE_rm_out.mat',base),'temp4','-v6')
+save(sprintf('%sMTT_volterra.mat',base),'temp1','-v6')
+save(sprintf('%sMTTSE_volterra.mat',base),'temp2','-v6')
+save(sprintf('%sMTT_block.mat',base),'temp3','-v6')
+save(sprintf('%sMTTSE_block.mat',base),'temp4','-v6')
 
-temp1 = (CBF_map);
-temp2 = (CBFSE_map);
-temp3 = (CBF_outlier);
-temp4 = (CBF_se_outlier);
+temp1 = (CBF_map_volterra);
+temp2 = (CBFSE_map_volterra);
+temp3 = (CBF_map_block);
+temp4 = (CBFSE_map_block);
 
-save(sprintf('%sCBF.mat',base),'temp1','-v6')
-save(sprintf('%sCBFSE.mat',base),'temp2','-v6')
-save(sprintf('%sCBF_rm_out.mat',base),'temp3','-v6')
-save(sprintf('%sCBFSE_rm_out.mat',base),'temp4','-v6')
+save(sprintf('%sCBF_volterra.mat',base),'temp1','-v6')
+save(sprintf('%sCBFSE_volterra.mat',base),'temp2','-v6')
+save(sprintf('%sCBF_block.mat',base),'temp3','-v6')
+save(sprintf('%sCBFSE_block.mat',base),'temp4','-v6')
 
-temp1 = (CBV_all);
-temp2 = (CBV_SE);
-temp3 = (CBV_outlier);
-temp4 = (CBV_se_outlier);
+temp1 = (CBV_all_volterra);
+temp2 = (CBV_SE_volterra);
+temp3 = (CBV_all_block);
+temp4 = (CBV_SE_block);
 
-save(sprintf('%sCBV.mat',base),'temp1','-v6')
-save(sprintf('%sCBVSE.mat',base),'temp2','-v6')
-save(sprintf('%sCBV_rm_out.mat',base),'temp3','-v6')
-save(sprintf('%sCBVSE_rm_out.mat',base),'temp4','-v6')
+save(sprintf('%sCBV_volterra.mat',base),'temp1','-v6')
+save(sprintf('%sCBVSE_volterra.mat',base),'temp2','-v6')
+save(sprintf('%sCBV_block.mat',base),'temp3','-v6')
+save(sprintf('%sCBVSE_block.mat',base),'temp4','-v6')
 
 
