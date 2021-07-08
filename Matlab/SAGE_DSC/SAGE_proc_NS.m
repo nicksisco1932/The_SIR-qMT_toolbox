@@ -34,7 +34,7 @@ for index=73
     %%
     % if you want to use Volterra, put a 1 in the flag spot
 %     [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(base_path,index,0);
-%     [DSC_volterra,CBF_map_volterra,CBFSE_map_volterra,CBV_all_volterra,CBV_SE_volterra,MTT_volterra,MTT_SE_volterra] = sage_proc_ns_func(base_path,index,1);
+    [DSC_volterra,CBF_map_volterra,CBFSE_map_volterra,CBV_all_volterra,CBV_SE_volterra,MTT_volterra,MTT_SE_volterra] = sage_proc_ns_func(base_path,index,1);
     [DSC_block,CBF_map_block,CBFSE_map_block,CBV_all_block,CBV_SE_block,MTT_block,MTT_SE_block] = sage_proc_ns_func(base_path,index,2);
     
 end
