@@ -46,18 +46,7 @@ function [CBF_map,CBFSE_map] = CBF_calc_volterra(DSC,brain_img,threshold,CTC_all
     [U,S,V]=svd(G);
     S_orig=S;
     maxS = max(diag(S));
-%     eigenV=diag(S);
-%     threshold=options.deconv.cSVD.threshold*max(eigenV);
-  
-    
-%     newEigen=zeros(size(eigenV));
-%     for k=1:length(eigenV);
-%         if eigenV(k)>=threshold;
-%             newEigen(k)=1/eigenV(k);
-%         end
-%     end
-% 
-%     Ginv=V*diag(newEigen)*(U');
+
 %--------------------------------------------------------------------------
     % 3. Calculate CBF
     CBF_map=zeros(DSC.Parms.nx,DSC.Parms.ny,DSC.Parms.nz);
