@@ -22,38 +22,44 @@ function [CBF_map,CBFSE_map] = CBF_calc_volterra(DSC,brain_img,threshold,CTC_all
     a = AIF(1:nTpad); % For continuity with literature and formal matrix notation
     columnG(1)=a(1);
     columnG(nt)=DSC.Parms.TR/6*(AIF(nt-1)+4*AIF(nt)); % Equation 6 10.1002/mrm.10522, Wu, 2003
-
-
-
-    %     columnG(nt+1)=a(nt)*TR/6;
-    columnG(nt+1)=a(nt)*TR/6;
-    %     for i=2:(nt-1)
-    for i=2:(nTpad-1)
-        a_minus = 2*a(i)+a(i-1)*TR/6;
-        a_plus = 2*a(i)+a(i+1)*TR/6;
-        a_plusminus = a_plus+a_minus;
-        columnG(i)=a_plusminus;
+    
+%--------------------------------------------------------------------------    
+    % 1. Created G matrix
+    aif = DSC.AIF(2,:)';
+    nTpad=2*nt;
+    columnG=zeros(nTpad,1);
+    columnG(1)=aif(1);
+    columnG(options.nT)=(aif(options.nT-1)+4*aif(options.nT))/6;
+    columnG(options.nT+1)=aif(options.nT)/6;
+    for k=2:(options.nT-1)
+        columnG(k)=(aif(k-1)+4*aif(k)+aif(k+1))/6;
     end
-
-    %     for i=nt
-    for i=nTpad
-        a_minus = 2*a(i)+a(i-1)*TR/6;
-        a_plus = 2*a(i)*TR/6;
-        a_plusminus = a_plus+a_minus;
-        columnG(i)=a_plusminus;
-    end
-
     rowG=zeros(1,nTpad);
     rowG(1)=columnG(1);
-    for j=2:nTpad
-        rowG(j)=columnG(nTpad+2-j);
+    for k=2:nTpad
+        rowG(k)=columnG(nTpad+2-k);
     end
-
+    
     G=toeplitz(columnG,rowG);
+%--------------------------------------------------------------------------
+    % 2. Singular value deconvolution
     [U,S,V]=svd(G);
+    S_orig=S;
     maxS = max(diag(S));
-    S_orig = S;
-
+%     eigenV=diag(S);
+%     threshold=options.deconv.cSVD.threshold*max(eigenV);
+  
+    
+%     newEigen=zeros(size(eigenV));
+%     for k=1:length(eigenV);
+%         if eigenV(k)>=threshold;
+%             newEigen(k)=1/eigenV(k);
+%         end
+%     end
+% 
+%     Ginv=V*diag(newEigen)*(U');
+%--------------------------------------------------------------------------
+    % 3. Calculate CBF
     CBF_map=zeros(DSC.Parms.nx,DSC.Parms.ny,DSC.Parms.nz);
     CBFSE_map=zeros(DSC.Parms.nx,DSC.Parms.ny,DSC.Parms.nz);
     nTpad=size(G,1); % renamed here
@@ -88,6 +94,9 @@ function [CBF_map,CBFSE_map] = CBF_calc_volterra(DSC,brain_img,threshold,CTC_all
             end
         end
     end
+    
+%--------------------------------------------------------------------------
+    
 
     CBF_map(CBF_map>1000)=0;
     CBFSE_map(CBFSE_map>1000)=0;
