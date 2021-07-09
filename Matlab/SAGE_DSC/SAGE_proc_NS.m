@@ -35,7 +35,7 @@ for index=73
     % if you want to use Volterra, put a 1 in the flag spot
 %     [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(base_path,index,0);
     [DSC_volterra,CBF_map_volterra,CBFSE_map_volterra,CBV_all_volterra,CBV_SE_volterra,MTT_volterra,MTT_SE_volterra] = sage_proc_ns_func(base_path,index,1);
-    [DSC_block,CBF_map_block,CBFSE_map_block,CBV_all_block,CBV_SE_block,MTT_block,MTT_SE_block] = sage_proc_ns_func(base_path,index,2);
+    [DSC_block,CBF_map_block,CBFSE_map_block,CBV_all_block,CBV_SE_block,MTT_block,MTT_SE_block,OEF_block,CMRO2_block,pO2_block] = sage_proc_ns_func(base_path,index,2);
     
 end
 %%
@@ -146,7 +146,7 @@ save(sprintf('%sCBV_block.mat',base),'temp3','-v6')
 save(sprintf('%sCBVSE_block.mat',base),'temp4','-v6')
 
 %%
-
+base='C:\Users\nicks\Documents\MRI_data\SAGE\AIF_optimizations\';
 info = niftiinfo(sprintf('%s/bPT1319073_preb_mask.nii.gz',base_path));
 info.Datatype='double';
 
@@ -154,4 +154,10 @@ niftiwrite(CBF_map_volterra,sprintf('%s/PT73_CBF_volterra.nii',base),info,'Compr
 niftiwrite(CBF_map_block,sprintf('%s/PT73_CBF_block.nii',base),info,'Compressed',1)
 
 
+niftiwrite(OEF_block,sprintf('%s/PT73_OEF_block.nii',base),info,'Compressed',1)
+niftiwrite(CMRO2_block,sprintf('%s/PT73_CMRO2_block.nii',base),info,'Compressed',1)
+niftiwrite(pO2_block,sprintf('%s/PT73_pO2_block.nii',base),info,'Compressed',1)
+
+
+%% OEF and pO2
 
