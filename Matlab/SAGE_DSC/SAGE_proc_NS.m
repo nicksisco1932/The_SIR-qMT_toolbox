@@ -145,4 +145,13 @@ save(sprintf('%sCBVSE_volterra.mat',base),'temp2','-v6')
 save(sprintf('%sCBV_block.mat',base),'temp3','-v6')
 save(sprintf('%sCBVSE_block.mat',base),'temp4','-v6')
 
+%%
+
+info = niftiinfo(sprintf('%s/bPT1319073_preb_mask.nii.gz',base_path));
+info.Datatype='double';
+
+niftiwrite(CBF_map_volterra,sprintf('%s/PT73_CBF_volterra.nii',base),info,'Compressed',1)
+niftiwrite(CBF_map_block,sprintf('%s/PT73_CBF_block.nii',base),info,'Compressed',1)
+
+
 
