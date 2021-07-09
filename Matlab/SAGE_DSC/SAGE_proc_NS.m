@@ -39,42 +39,56 @@ for index=73
     
 end
 %%
-CBV_all(CBV_all>100)=0;
+% CBV_all(CBV_all>100)=0;
 CBV_all_volterra(CBV_all_volterra>100)=0;
 CBV_all_block(CBV_all_block>100)=0;
-CBV_SE(CBV_SE>100)=0;
+% CBV_SE(CBV_SE>100)=0;
 CBV_SE_volterra(CBV_SE_volterra>100)=0;
 CBV_SE_block(CBV_SE_block>100)=0;
 
-CBF_map(CBF_map>1000)=0;
+% CBF_map(CBF_map>1000)=0;
 CBF_map_volterra(CBF_map_volterra>1000)=0;
 CBF_map_block(CBF_map_block>1000)=0;
-CBFSE_map(CBFSE_map>1000)=0;
+% CBFSE_map(CBFSE_map>1000)=0;
 CBFSE_map_volterra(CBFSE_map_volterra>1000)=0;
 CBFSE_map_block(CBFSE_map_block>1000)=0;
 
-MTT(MTT>100)=0;
+% MTT(MTT>100)=0;
 MTT_volterra(MTT_volterra>100)=0;
 MTT_block(MTT_block>100)=0;
-MTT_SE(MTT_SE>100)=0;
+% MTT_SE(MTT_SE>100)=0;
 MTT_SE_volterra(MTT_SE_volterra>100)=0;
 MTT_SE_block(MTT_SE_block>100)=0;
 
 kernel=[5 5 5];
-CBF_map = removeOutlierVolume(CBF_map,2,kernel);
-CBFSE_map = removeOutlierVolume(CBFSE_map,2,kernel);
-CBV_all = removeOutlierVolume(CBV_all,2,kernel);
-CBV_SE = removeOutlierVolume(CBV_SE,2,kernel);
-MTT = removeOutlierVolume(MTT,2,kernel);
-MTT_SE = removeOutlierVolume(MTT_SE,2,kernel);
+% CBF_map = removeOutlierVolume(CBF_map,2,kernel);
+% CBFSE_map = removeOutlierVolume(CBFSE_map,2,kernel);
+% CBV_all = removeOutlierVolume(CBV_all,2,kernel);
+% CBV_SE = removeOutlierVolume(CBV_SE,2,kernel);
+% MTT = removeOutlierVolume(MTT,2,kernel);
+% MTT_SE = removeOutlierVolume(MTT_SE,2,kernel);
 
+CBF_map_block = removeOutlierVolume(CBF_map_block,2,kernel);
+CBFSE_map_block = removeOutlierVolume(CBFSE_map_block,2,kernel);
+CBV_all_block = removeOutlierVolume(CBV_all_block,2,kernel);
+CBV_SE_block = removeOutlierVolume(CBV_SE_block,2,kernel);
+MTT_block = removeOutlierVolume(MTT_block,2,kernel);
+MTT_SE_block = removeOutlierVolume(MTT_SE_block,2,kernel);
 
-CBF_outlier_volterra = removeOutlierVolume(CBF_map_volterra,2,kernel);
-CBF_se_outlier_volterra = removeOutlierVolume(CBFSE_map_volterra,2,kernel);
-CBV_outlier_volterra = removeOutlierVolume(CBV_all_volterra,2,kernel);
-CBV_se_outlier_volterra = removeOutlierVolume(CBV_SE_volterra,2,kernel);
-mtt_outlier_volterra = removeOutlierVolume(MTT_volterra,2,kernel);
-mtt_se_outlier_volterra = removeOutlierVolume(MTT_SE_volterra,2,kernel);
+CBF_map_volterra = removeOutlierVolume(CBF_map_volterra,2,kernel);
+CBFSE_map_volterra = removeOutlierVolume(CBFSE_map_volterra,2,kernel);
+CBV_all_volterra = removeOutlierVolume(CBV_all_volterra,2,kernel);
+CBV_SE_volterra = removeOutlierVolume(CBV_SE_volterra,2,kernel);
+MTT_volterra = removeOutlierVolume(MTT_volterra,2,kernel);
+MTT_SE_volterra = removeOutlierVolume(MTT_SE_volterra,2,kernel);
+
+ 
+% CBF_outlier_volterra = removeOutlierVolume(CBF_map_volterra,2,kernel);
+% CBF_se_outlier_volterra = removeOutlierVolume(CBFSE_map_volterra,2,kernel);
+% CBV_outlier_volterra = removeOutlierVolume(CBV_all_volterra,2,kernel);
+% CBV_se_outlier_volterra = removeOutlierVolume(CBV_SE_volterra,2,kernel);
+% mtt_outlier_volterra = removeOutlierVolume(MTT_volterra,2,kernel);
+% mtt_se_outlier_volterra = removeOutlierVolume(MTT_SE_volterra,2,kernel);
 
 
 %%
@@ -160,4 +174,5 @@ niftiwrite(pO2_block,sprintf('%s/PT73_pO2_block.nii',base),info,'Compressed',1)
 
 
 %% OEF and pO2
+
 
