@@ -150,8 +150,6 @@ function work(IND::Vector{Int64},f::Function,echos::Vector{Float64},vec_data::Ar
         temp = vec_data[ii,:];
         fitY = optim_fitty(f, echos, temp, X0);fitdata[ii,:] = fitY.param
         # fitY = optim_fitty(echos, temp, X0);fitdata[ii,:] = fitY
-        
-        
     end
     
     return fitdata
