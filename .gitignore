@@ -7,3 +7,4 @@ R2_R2s_sim.nii.gz
 R2_fit.nii.gz
 R2_diff.nii.gz
 *.mat
+*.asv
