@@ -1,4 +1,4 @@
-function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(temp,index,FLAG)
+function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE,OEF,CMRO2,pO2] = sage_proc_ns_func(temp,index,FLAG)
 %     Author: Nicholas J. Sisco, Ph.D. 
 %     Email: X@barrowneuro.org where X = nicholas.sisco
 %     Affiliation: Barrow Neurological Institue in Phoenix, AZ
@@ -117,4 +117,8 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE] = sage_proc_ns_func(t
     CBF_map=6000.*CBF_map;
     CBFSE_map=6000.*CBFSE_map;
     
+    %% OEF,CMRO2,pO2
+    [OEF,CMRO2,pO2] = OEF_CMRO2_pO2(dR2star_all,dR2star_SE,CBF_map,CBV_all,DSC,brain_img);
+    
+   
 end
