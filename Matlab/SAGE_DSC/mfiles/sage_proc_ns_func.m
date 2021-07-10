@@ -144,6 +144,9 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE,OEF,CMRO2,pO2] = sage_
         te4 = fullfile(out_path,sprintf("PT1319%03i_TE%s_img_w_Skull.nii.gz",index,num2str(4)));
         te5 = fullfile(out_path,sprintf("PT1319%03i_TE%s_img_w_Skull.nii.gz",index,num2str(5)));
         bfname=fullfile(out_path,sprintf("PT1319%03i_brain_mask.nii.gz",index));
+        
+        
+        
         [dR2star_all,dR2star_SE] = sage_julia_fitty(out_path,te1,te2,te3,te4,te5,bfname,DSC);
     end
     

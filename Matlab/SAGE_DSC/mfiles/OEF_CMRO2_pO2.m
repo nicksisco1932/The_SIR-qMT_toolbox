@@ -16,12 +16,18 @@ close all
 %         pause(0.1)
 % 
 %     end
-    lamda_H=(267.522E6); %rad/s/T
-    deltaChi = 0.0924E-7; % Susceptibility
-%     deltaChi = 0.264E-6; % Susceptibility
+    gammaH=(267.522E6); %rad/s/T
+%     deltaChi = 0.0924E-7; % Susceptibility? where did this come from
+%     deltaChi = 0.264e-6; % 0.264 ppm Spees et al. for RBC 
+    deltaChi = 0.264E-6; % Susceptibility
     Hct=0.42*0.85;       % Hematocrit
-    B0=3;                % T 
-    OEF = R2prime./(4/3*pi()*lamda_H*deltaChi*Hct*B0.*CBV);
+%     Hct=0.44;       % Hematocrit
+    B0=3;                % T
+    
+    delta_omegaS = (4*pi()/3)*gammaH*deltaChi*Hct*B0;
+    
+%     OEF = R2prime./(4/3*pi()*gammaH*deltaChi*Hct*B0.*CBV);
+    OEF = R2prime./(delta_omegaS.*CBV);
     OEF(find(logical(brain_img)==0))=0;
     % OEF(OEF>100)=0;
 %     for slice_num = 1:nt
@@ -29,7 +35,7 @@ close all
 %         imagesc(img(:,:,slice_num)); axis image; colorbar;title("OEF")
 %         pause(0.5)
 %     end
-    Ca=8.68; % mmol/mL arterial blood oxygen content
+    Ca=8.8; % mmol/mL arterial blood oxygen content
     
     CBF(CBF>1000)=0;
     
@@ -39,15 +45,17 @@ close all
 %         imagesc(img(:,:,slice_num)); axis image; colorbar;title("CMR02")
 %         pause(0.05)
 %     end
-    p50=27; % mmHg
+    p50=26/10; % mmHg
 %     h=0.27; % Hill coefficient of Hg binding O2
-    h=2.7; % Hill coefficient of Hg binding O2
+    h=2.55; % Hill coefficient of Hg binding O2,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3949039/
     L=4.4;  % mmol/Hg/min
-    pO2 = p50.* power(2./OEF-1,1/h)-CMRO2/L;
+%     pO2 = p50.* power(2./OEF-1,1/h)-CMRO2/L;
+    pO2 = p50.* (2./OEF-1).^(1/h)-CMRO2/L;
     pO2(isinf(pO2))=0;
     pO2(isnan(pO2))=0;
     pO2(pO2<0)=0;
     pO2(pO2>200)=0;
+    warning('There is something wrong with the pO2 calculation')
 %     for slice_num = 1:nt
 %         img=permute(brain_img.*pO2(:,:,slice_num,jj),[2 1 3]);
 %         imagesc(img(:,:,slice_num),[0 80]); axis image; colorbar;title("pO2")
