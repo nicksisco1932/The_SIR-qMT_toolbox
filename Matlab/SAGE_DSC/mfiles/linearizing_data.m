@@ -32,13 +32,16 @@ function [dR2star_all,dR2star_SE,CTC_all,CTC_SE] = linearizing_data(DSC,filtered
     CTC_all(isnan(CTC_all)) = 0;
     CTC_SE(isinf(CTC_SE)) = 0;
     CTC_SE(isnan(CTC_SE)) = 0;
-    ind=find(brain_img);
+    
+    mask4d = repmat(brain_img,[1 1 1 nt]);
     dR2star_all(isnan(dR2star_all))=0;
     dR2star_SE(isnan(dR2star_SE))=0;
     dR2star_all(isinf(dR2star_all))=0;
     dR2star_SE(isinf(dR2star_SE))=0;
-    dR2star_all(ind)=0;
-    dR2star_SE(ind)=0;
+    dR2star_all(dR2star_all<0)=0; 
+    dR2star_SE(dR2star_SE<0)=0;
+    dR2star_all = dR2star_all.*mask4d;
+    dR2star_SE = dR2star_SE.*mask4d;
 
-    clear STE1 STE2 STE0 STE0_fraction STE5 STE1_pre STE2_pre 
+    
 end

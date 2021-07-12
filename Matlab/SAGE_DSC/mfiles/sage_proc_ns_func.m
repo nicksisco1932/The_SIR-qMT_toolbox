@@ -127,6 +127,8 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE,OEF,CMRO2,pO2] = sage_
         if ~isfolder(out_path)
             mkdir(out_path)
         end
+        [dR2star_all,dR2star_SE,CTC_all,CTC_SE] = linearizing_data(DSC,filtered_image,brain_img);
+        
         te1 = fullfile(temp,sprintf("PT1319%03i_TE%s_img_w_Skull.nii.gz",index,num2str(1)));
         te2 = fullfile(temp,sprintf("PT1319%03i_TE%s_img_w_Skull.nii.gz",index,num2str(2)));
         te3 = fullfile(temp,sprintf("PT1319%03i_TE%s_img_w_Skull.nii.gz",index,num2str(3)));
@@ -147,7 +149,7 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE,OEF,CMRO2,pO2] = sage_
         
         
         
-        [dR2star_all,dR2star_SE] = sage_julia_fitty(out_path,te1,te2,te3,te4,te5,bfname,DSC);
+        [R2star_all,R2star_SE] = sage_julia_fitty(out_path,te1,te2,te3,te4,te5,bfname,DSC);
     end
     
     %% CBV
@@ -180,13 +182,13 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE,OEF,CMRO2,pO2] = sage_
     MTT_SE(~ind)=0;
     MTT_SE(isinf(MTT_SE))=0;
     
-    CBV_all=0.733*100.*CBV_all;
-    CBV_SE=0.733*100.*CBV_SE;
-    CBF_map=6000.*CBF_map;
-    CBFSE_map=6000.*CBFSE_map;
+    CBV_all = 0.733*100.*CBV_all;
+    CBV_SE = 0.733*100.*CBV_SE;
+    CBF_map = 6000.*CBF_map;
+    CBFSE_map = 6000.*CBFSE_map;
     
     %% OEF,CMRO2,pO2
-    [OEF,CMRO2,pO2] = OEF_CMRO2_pO2(dR2star_all,dR2star_SE,CBF_map,CBV_all,DSC,brain_img);
+    [OEF,CMRO2,pO2] = OEF_CMRO2_pO2(R2star_all,R2star_SE,CBF_map,CBV_all,DSC,brain_img);
 
     
    
