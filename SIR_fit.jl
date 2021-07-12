@@ -117,8 +117,6 @@ function main()
         fitOUT = timed(tot_voxels,vec_mask,col_pre_zeros,times,colY,X0); # column major
     end
 
-    # param, resids = nlsfit(SIR_signal_absolute,yy,vec_mask,times,X0)
-
     if ROW_MAJOR
         Xv = Array{Float64}(fitOUT);
     else
