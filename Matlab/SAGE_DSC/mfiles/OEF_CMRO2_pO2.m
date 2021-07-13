@@ -44,13 +44,15 @@ function [OEF,CMRO2,pO2] = OEF_CMRO2_pO2(R2s,R2,CBF,CBV,DSC,brain_img)
 %     end
     
 %% OEF is a factor of 25 off
-    OEF=25.*OEF.*100; % as a percentage in a lot of publication figures
+%     OEF=25.*OEF.*100; % as a percentage in a lot of publication figures 
+    % Is this b/c I'm converting CBV to mL/100g with 0.733*100?
+    OEF=OEF.*100; % is it supposed to be a percentage?
 
     Ca = 8.8; % mmol/mL arterial blood oxygen content (wrongly cited) umol/mL https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4605053/  https://onlinelibrary.wiley.com/doi/10.1002/mrm.23283  
     CBF(CBF>1000)=0;
 
-%     CMRO2 = OEF.*CBF.*Ca;
-    CMRO2 = OEF.*CBF.*Ca/1000; % units should be umol/100g/min according to  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4605053/
+%     CMRO2 = OEF.*CBF.*Ca/1000; % units should be umol/100g/min according to  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4605053/
+    CMRO2 = OEF.*CBF.*Ca/1000;
 %     for jj = 1
 %         img=permute(brain_img.*CMR02(:,:,slice_num,jj),[2 1 3]);
 %         imagesc(img(:,:,slice_num)); axis image; colorbar;title("CMR02")
@@ -60,11 +62,13 @@ function [OEF,CMRO2,pO2] = OEF_CMRO2_pO2(R2s,R2,CBF,CBV,DSC,brain_img)
     h=2.55; % Hill coefficient of Hg binding O2, https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3949039/
     L=4.4;  % mmol/Hg/min % now it's back to mmol
 %     pO2 = p50.* power(2./OEF-1,1/h)-CMRO2/L;
-    pO2 = p50.* (2./(OEF/100)-1).^(1/h)-CMRO2/L;
+    pO2 = p50.* (2./(OEF)-1).^(1/h)-CMRO2/L;
     pO2(isinf(pO2))=0;
     pO2(isnan(pO2))=0;
     pO2(pO2<0)=0;
-    pO2(pO2>200)=0;
+    pO2(pO2>2000)=0;
+    pO2=real(pO2);
+    
     warning('There is something wrong with the pO2 calculation')
 %     for slice_num = 1:nt
 %         img=permute(brain_img.*pO2(:,:,slice_num,jj),[2 1 3]);
