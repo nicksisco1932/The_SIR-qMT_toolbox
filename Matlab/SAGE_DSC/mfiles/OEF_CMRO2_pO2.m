@@ -48,7 +48,7 @@ function [OEF,CMRO2,pO2] = OEF_CMRO2_pO2(R2s,R2,CBF,CBV,DSC,brain_img)
     % Is this b/c I'm converting CBV to mL/100g with 0.733*100?
     OEF=OEF.*100; % is it supposed to be a percentage?
 
-    Ca = 8.8; % mmol/mL arterial blood oxygen content (wrongly cited) umol/mL https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4605053/  https://onlinelibrary.wiley.com/doi/10.1002/mrm.23283  
+    Ca = 8.8; %  umol/mL https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4605053/  https://onlinelibrary.wiley.com/doi/10.1002/mrm.23283  
     CBF(CBF>1000)=0;
 
 %     CMRO2 = OEF.*CBF.*Ca/1000; % units should be umol/100g/min according to  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4605053/
