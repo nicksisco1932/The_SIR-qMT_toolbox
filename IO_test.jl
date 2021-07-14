@@ -11,16 +11,24 @@ function commandline()
     settings = ArgParseSettings()
 
     @add_arg_table! settings begin
-        "SIR_nii_1"
-        required = true
-        "SIR_nii_2"
-        required = true
-        "SIR_nii_3"
-        required = true
-        "SIR_nii_4"
-        required = true
-        "SIR_nii_brainMask"
-        required = true
+        # "SIR_nii_1"
+        # required = true
+        # "SIR_nii_2"
+        # required = true
+        # "SIR_nii_3"
+        # required = true
+        # "SIR_nii_4"
+        # required = true
+        # "SIR_nii_brainMask"
+        # required = true
+        "--TD"
+            nargs = 4
+            arg_type = Float64
+            help = "tD values, 4 required"
+        "--TI"
+            nargs = 4
+            arg_type = Float64
+            help = "tI values, 4 required"
     end
 
     println(parse_args(settings))
@@ -34,5 +42,7 @@ end
 
 a = commandline()
 
-base = a["SIR_nii_1"]
+base = a["TD"]
+
+println(a["TI"])
 

@@ -234,11 +234,41 @@ function SIR_signal_absolute(x::Matrix{Float64}, p::Vector{Float64})
     Sf = S[1]
     Sm = S[2]
 
-    R1minus,R1plus,R1diff = R1_minus_plus(R1f,R1m,pmf,kmf)
-    bftdplus,bftdminus,bmtdminus,bmtdplus = amplitude(R1f,R1m,R1minus,R1diff,R1plus)
-    Mftd,Mmtd = signal_recovery(R1plus,R1minus,td,bftdplus,bftdminus,bmtdminus,bmtdplus)
-    bfminus,bfplus = amplitude_ti(Sf,Sm,R1f,R1minus,R1plus,R1diff,Mftd,Mmtd,pmf,kmf)
-    Mm = signal_equation(R1plus,R1minus,bfplus,bfminus,ti,Mfinf)
+    R1diff = sqrt((R1f - R1m + (pmf - 1) * kmf)^2 + 4 * pmf * kmf^2)
+    R1plus = (R1f + R1m + (1 + pmf) * kmf + R1diff) / 2
+    R1minus = R1plus - R1diff
+    # Component amplitude terms for td terms (Eq. 5)
+    bftdplus = -(R1f - R1minus) / R1diff
+    bftdminus = (R1f - R1plus) / R1diff
+    bmtdplus = -(R1m - R1minus) / R1diff
+    bmtdminus = (R1m - R1plus) / R1diff
+    # Signal recovery during td (Eq. 5)
+    Mftd = bftdplus .* exp.(-R1plus * td) + bftdminus * exp.(-R1minus * td) .+ 1
+    Mmtd = bmtdplus .* exp.(-R1plus * td) + bmtdminus * exp.(-R1minus * td) .+ 1
+    # Component amplitude terms for ti terms (Eq. 5)
+    bfplus = (
+            (Sf * Mftd .- 1) * (R1f .- R1minus) .+
+            (Sf .* Mftd .- Sm * Mmtd) .* pmf .* kmf  ) ./ R1diff
+    bfminus =
+        -(
+            (Sf * Mftd .- 1) * (R1f .- R1plus) .+
+            (Sf .* Mftd .- Sm * Mmtd) .* pmf .* kmf
+        ) ./ R1diff
+
+
+
+     # Signal equation (Eq. 3)
+     Mm =
+     (
+         bfplus .* exp.(-R1plus .* ti) .+ bfminus .* exp.(-R1minus .* ti) .+
+         1
+     ) .* Mfinf
+
+    # R1minus,R1plus,R1diff = R1_minus_plus(R1f,R1m,pmf,kmf)
+    # bftdplus,bftdminus,bmtdminus,bmtdplus = amplitude(R1f,R1m,R1minus,R1diff,R1plus)
+    # Mftd,Mmtd = signal_recovery(R1plus,R1minus,td,bftdplus,bftdminus,bmtdminus,bmtdplus)
+    # bfminus,bfplus = amplitude_ti(Sf,Sm,R1f,R1minus,R1plus,R1diff,Mftd,Mmtd,pmf,kmf)
+    # Mm = signal_equation(R1plus,R1minus,bfplus,bfminus,ti,Mfinf)
     M = abs.(Mm)
     return M 
 end
