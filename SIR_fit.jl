@@ -52,6 +52,26 @@
         \n"
 
 =#
+using Pkg	
+try
+    println("If is first time you ran the code. It will take a minute to precompile.")
+    @eval using NIfTI; 
+    @eval using LsqFit;
+    @eval using Printf
+    @eval using ArgParse;
+    Pkg.precompile()
+catch e
+    # not found; install and try loading again
+    Pkg.add("NIfTI")
+    Pkg.add("LsqFit")
+    Pkg.add("Printf")
+    Pkg.add("ArgParse")
+    @eval using NIfTI; 
+    @eval using LsqFit;
+    @eval using Printf
+    @eval using ArgParse;
+end
+
 using NIfTI; 
 using LsqFit;
 using Printf
