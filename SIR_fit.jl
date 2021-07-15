@@ -17,10 +17,7 @@
 
     User supplied data:
         - Command line usage
-        $ julia -t <threads #> ./SIR_fit.jl <path to Python processed data>
-
-        - In the Python processed directory, there should be nt number of preprocessed nifti files, corresponding 
-        to the number of dynamic time points in the data, e.g. nt = 4 means there are ti = [15,15,...,...], etc.
+        $ julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data <PATH>/SIR_DATA.nii.gz --SIR_brainMask <PATH>/brain_mask.nii.gz --kmf 14.5 --Sm 0.83
 
     Output:
         - The output from this script are three nifti files for the fitting parameters pool size ratio, R1f (free transverse relaxation rate), and Sf (field inhomogeneity)
@@ -118,9 +115,11 @@ function main()
     #     joinpath(base,basename(a["SIR_nii_4"]))
     #     ]
     b_fname = joinpath(base,basename(a["SIR_brainMask"]))
+ 
+    # ti_times = Array{Float64}([15, 15, 278, 1007] * 1E-3); # temp hard code
+    # td_times = Array{Float64}([684, 4121, 2730, 10] * 1E-3); # temp hard code
 
-    # ti_times = Array{Float64}([15, 15, 278, 1007] * 1E-3);
-    # td_times = Array{Float64}([684, 4121, 2730, 10] * 1E-3);
+    # Error in TD unit handling. If the user puts in ms, convert to s
     if a["TI"][1]>1
         ti_times = a["TI"]* 1E-3
         td_times = a["TD"]* 1E-3
@@ -133,19 +132,6 @@ function main()
     thr = Threads.nthreads()
     println("Fitting with $thr threads")
 
-    #=
-    paths = [ @sprintf("%s/preprocessed_0.nii.gz",base),
-               @sprintf("%s/preprocessed_1.nii.gz",base),
-               @sprintf("%s/preprocessed_2.nii.gz",base), 
-               @sprintf("%s/preprocessed_3.nii.gz",base)
-               ]
-    DATA = Array{Float64}(zeros(nt,nx,ny,nz));
-    for (n,ii) in enumerate(paths)
-        temp = niread(ii)
-        data=Array{Float64}(temp.raw)
-        DATA[n,:,:,:] = data;
-    end    
-    =#
 
     # The new stuff
         
@@ -190,8 +176,8 @@ function main()
         return fit.param
     end
 
-    # kmfmat=14.5;
-    # Smmat=0.83;
+    # kmfmat=14.5; # temp hard code
+    # Smmat=0.83; # temp hard code
     kmfmat = a["kmf"][1]
     Smmat=a["Sm"][1]
     mag=true;
@@ -207,7 +193,7 @@ function main()
         end #begin
     end #f()
 
-    @time f()
+    @time f() # Fitting call
 
     #= 
     Finishing up 
