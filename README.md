@@ -18,6 +18,16 @@ Make sure you change the <PATH> to the absolute path of your SIR data and brain 
 julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data <PATH>/SIR_DATA.nii.gz --SIR_brainMask <PATH>/brain_mask.nii.gz --kmf 14.5 --Sm 0.83
 ```
 
+
+**Results of a Successful SIR-qMT fit**
+<p align="center">
+  <img src="https://github.com/nicksisco1932/The_MRI_toolbox/blob/master/Images/Brain_Figure.png" alt="drawing" width="400"/>
+</p>
+Representative SIR-qMT on a healthy volunteer. A represents the first data point corresponding to t<sub>I</sub>,t<sub>D</sub> = 278,2730 ms. B, C, and D are maps from the fit parameters pool size ratio, R<sub>1f</sub>, and S<sub>f</sub> (B<sub>1</sub> inhomogeneity), respectively. These images are consistent with published parameters, white matter have the highest relative PSR and R<sub>1f</sub>, while S<sub>f</sub> remains relatively flat at 3T with slight increases near the posterior of this map.
+  
+  
+# Using Matlab or Python to call Julia examples.
+  
 **Python**
 ```Python
 # A function wrapper to call Julia to fit spin- and gradient-echo signal to a piecewise function using Julia
@@ -69,9 +79,4 @@ end
 
 ```
 
-**Results of a Successful SIR-qMT fit**
-<p align="center">
-  <img src="https://github.com/nicksisco1932/The_MRI_toolbox/blob/master/Images/Brain_Figure.png" alt="drawing" width="400"/>
-</p>
-Representative SIR-qMT on a healthy volunteer. A represents the first data point corresponding to t<sub>I</sub>,t<sub>D</sub> = 278,2730 ms. B, C, and D are maps from the fit parameters pool size ratio, R<sub>1f</sub>, and S<sub>f</sub> (B<sub>1</sub> inhomogeneity), respectively. These images are consistent with published parameters, white matter have the highest relative PSR and R<sub>1f</sub>, while S<sub>f</sub> remains relatively flat at 3T with slight increases near the posterior of this map.
 
