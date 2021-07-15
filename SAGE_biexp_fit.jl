@@ -84,11 +84,37 @@
     "   - Added some MATLAB coding implimentation \n"
 
 =#
+
+using Pkg	
+try
+    println("If is first time you ran the code. It will take a minute to precompile.")
+    @eval using NIfTI; 
+    @eval using LsqFit;
+    @eval using Printf
+    @eval using ArgParse;
+    @eval using Statistics;
+    @eval using Optim;
+    Pkg.precompile()
+catch e
+    # not found; install and try loading again
+    Pkg.add("NIfTI")
+    Pkg.add("LsqFit")
+    Pkg.add("Printf")
+    Pkg.add("ArgParse")
+    @eval using NIfTI; 
+    @eval using LsqFit;
+    @eval using Printf
+    @eval using ArgParse;
+    @eval using Statistics;
+    @eval using Optim;
+end
+
 using NIfTI; 
 using LsqFit;
 using Printf
 using ArgParse;
-using Optim
+using Statistics;
+using Optim;
 
 include("./utils.jl")
 
@@ -125,6 +151,10 @@ function commandline()
         required = true
         "TE5"
         required = true
+        "--echos"
+            nargs = 5
+            arg_type = Float64
+            help = "Echo times, 5 required"
     end
 
     println(parse_args(settings))
@@ -171,37 +201,95 @@ function main()
 
     DATA,MASK,nx,ny,nz,ne,nt=load_sage_data(paths,b_fname);
     tot_voxels = nx*ny*nz
-    
     vec_mask = reshape(MASK[:,:,:,1,1],tot_voxels,1);
-    
+    vec_data = reshape(DATA,tot_voxels,ne,nt);
+
     # MASK = Array{Bool}(niread(b_fname))
     # MASK = MASK.raw
     # vec_mask = reshape(MASK,tot_voxels,1)
     
 
-    vec_data = reshape(DATA,tot_voxels,ne,nt)
-
-
-
-    # te1=0.00782;
-    # te2=0.028769;
-    # te3=0.060674;
-    # te4=0.081622;
-    # te5=0.102571;
-    # echos=Vector{Float64}([te1,te2,te3,te4,te5])
     
+
+
+#= Long comment
+    te1=0.00782;
+    te2=0.028769;
+    te3=0.060674;
+    te4=0.081622;
+    te5=0.102571;
+    echos=Vector{Float64}([te1,te2,te3,te4,te5])
+ 
     te1=parse(Float64,a["TE1"])
     te2=parse(Float64,a["TE2"])
     te3=parse(Float64,a["TE3"])
     te4=parse(Float64,a["TE4"])
     te5=parse(Float64,a["TE5"])
-    echos=Vector{Float64}([te1,te2,te3,te4,te5])
+    echos=Array{Float64}([te1,te2,te3,te4,te5])
 
-    # echos=Vector{Float64}()
+=# 
+    echos = Array{Float64}(parse(Float64,a["echos"]))
+    if echos[1]>1
+        echos = echos.* 1E-3
+    else
+        echos = echos;
+    end
+
     TR = 1800/1000;
 
     X0=[1000,100.0,50,100]
     IND=findall(x->x.>0,vec_mask[:,1]);
+
+    STE1=zeros(nx,ny,nz)
+    STE2=similar(STE1)
+    STE5=similar(STE1)
+    begin
+        for ii in 1:nx
+            for jj in 1:ny
+                for kk in 1:nz
+                    STE1[ii,jj,kk] = mean(DATA[ii,jj,kk,1,1:15]);
+                    STE2[ii,jj,kk] = mean(DATA[ii,jj,kk,2,1:15]);
+                    STE5[ii,jj,kk] = mean(DATA[ii,jj,kk,5,1:15]);
+                end
+            end
+        end
+    end
+
+    STE1_pre = repeat(STE1,1,1,1,150);
+    STE2_pre = repeat(STE1,1,1,1,150);
+    STE5_pre = repeat(STE1,1,1,1,150);
+
+    ste1 = DATA[:,:,:,1,:];
+    ste2 = DATA[:,:,:,2,:];
+    ste5 = DATA[:,:,:,5,:];
+
+
+    
+    R₂star_log = similar(STE1_pre);
+    R₂_log = similar(STE1_pre);
+
+    IND=findall(x->x==true,MASK);
+    begin
+        for ii in 1:nx
+            for jj in 1:ny
+                for kk in 1:nz
+                    if MASK[ii,jj,kk]
+                        for bb = 1:nt
+                            a = ste1[ii,jj,kk,bb];
+                            # b = STE1_pre[ii,jj,kk,bb];
+                            c = ste2[ii,jj,kk,bb];
+                            # d = STE2_pre[ii,jj,kk,bb];
+                            e = ste5[ii,jj,kk,bb];
+                            # f = STE5_pre[ii,jj,kk,bb];
+                            ste0 = a*(a/c)^(te1/(te2-te1))
+                            R₂star_log[ii,jj,kk,bb] = log( (a) / (c)) /(te2-te1)
+                            R₂_log[ii,jj,kk,bb] = log( (ste0 / e)) /te5
+                        end
+                    end
+                end
+            end
+        end
+    end
 
 
     fitdata = zeros(tot_voxels,4,nt);
@@ -213,6 +301,87 @@ function main()
     # tempFit_data = fitdata[:,:,1]
     # @time work(IND,SAGE_biexp3p_d,echos,vec_data[:,:,1],X0,tempFit_data,1)
 =#
+
+    R2fit = zeros(nx,ny,nz,nt);
+    R2sfit = zeros(nx,ny,nz,nt);
+    
+    newDATA = zeros(nx,ny,nz,nt,ne);
+    
+    function sage_ns(echotimes,p)
+        x=echotimes;
+        TE=x[end];
+        R₂star = p[2]
+        R₂ = p[3]
+        S₀I = p[1]
+        S₀II = p[4]
+
+        M = similar(echotimes)
+        for k in 1:length(echotimes)
+            if x[k]<TE/2
+                M[k] = S₀I * exp(-x[k] * R₂star)
+            elseif x[k]>TE/2
+                M[k] = S₀II * exp(-TE * (R₂star - R₂) * exp(-x[k] * (2*R₂-R₂star)))
+            end
+        end
+        return M
+    end
+
+    function sqerrorSAGE(betas::Vector{Float64}, X::Vector{Float64}, Y::Vector{Float64}) 
+        err = 0.0
+        pred_i = sage_ns(X,betas)
+        for ii in 1:length(Y)
+            err += (abs.(pred_i[ii])-Y[ii]).^2
+        end
+        return err
+    end
+    
+    #= Too slow
+    x0 = zeros(4,1)
+    @time for ii in 1:nx
+        for jj in 1:ny
+            for kk in 1:nz
+                if MASK[ii,jj,kk]
+                    Threads.@threads for bb = 1:nt
+                        x0[1] = maximum(DATA[ii,jj,kk,:,bb])
+                        x0[2] = R₂star_log[ii,jj,kk,bb]
+                        x0[3] = R₂_log[ii,jj,kk,bb]
+                        x0[4] = 1
+                        model(echos,x0) = sage_ns(echos,x0)
+                        # fit = nlsfit(model,echos,DATA[ii,jj,kk,:,bb],x0)
+                        fit = Optim.minimizer(optimize(b -> sqerrorSAGE(b, echos,  DATA[IND[1],:,1]), X0))
+                        R2sfit[ii,jj,kk,bb] = fit[2]
+                        R2fit[ii,jj,kk,bb] = fit[3]
+                    end
+                end
+            end
+        end
+    end
+=#
+
+    vec_R2fit = zeros(tot_voxels,nt);
+    vec_R2sfit = zeros(tot_voxels,nt);
+    vec_R2_log = reshape(R₂_log,tot_voxels,nt);
+    vec_R2s_log = reshape(R₂star_log,tot_voxels,nt);
+
+    x0 = zeros(4,1)
+    for dynamics in 1:nt
+        @time for vox in 1:tot_voxels
+            if vec_mask[vox]
+                x0[1] = maximum(vec_data[vox,:,dynamics])
+                x0[2] = vec_R2s_log[vox,dynamics]
+                x0[3] = vec_R2_log[vox,dynamics]
+                x0[4] = 1
+                println(x0)
+                model(xs,p) = sage_ns(echos,x0)
+                fit = nlsfit(model,echos,vec_data[vox,:,dynamics],x0)
+                # fit = Optim.minimizer(optimize(b -> sqerrorSAGE(b, echos,  DATA[IND[1],:,1]), x0))
+                # vec_R2sfit[vox,:,dynamics] = fit[2];
+                # vec_R2fit[vox,:,dynamics] = fit[3];
+            end
+        end
+        println("Done with Fit $dynamics of $nt")
+    end
+
     @time for JJ=1:nt;
         temp = vec_data[:,:,JJ]
         tempFit_data = fitdata[:,:,JJ]
@@ -241,10 +410,19 @@ function main()
 
     R2s_fname = @sprintf("%s/SAGE_R2s_Brain_julia.nii.gz",base)
     R2_fname = @sprintf("%s/SAGE_R2_Brain_julia.nii.gz",base)
+
+   
     temp1 = NIVolume(R2s;voxel_size=(tmp1,tmp2,tmp3))
     niwrite(R2s_fname,temp1)
     temp2 = NIVolume(R2;voxel_size=(tmp1,tmp2,tmp3))
     niwrite(R2_fname,temp2)
+
+    R2s_fname_log = @sprintf("%s/SAGE_R2s_Brain_julia_log.nii.gz",base)
+    R2_fname_log = @sprintf("%s/SAGE_R2_Brain_julia_log.nii.gz",base)
+    temp1 = NIVolume(R₂star_log;voxel_size=(tmp1,tmp2,tmp3));
+    niwrite(R2s_fname_log,temp1)
+    temp2 = NIVolume(R₂_log;voxel_size=(tmp1,tmp2,tmp3));
+    niwrite(R2_fname_log,temp2)
 
     println("The R2s is saved at $R2s_fname")
     println("The R2 is saved at $R2_fname")

@@ -343,6 +343,12 @@ function SAGE_biexp3p_d(te,x)
     # %67:378-388
     ind1 = findall(x->x<TE/2,tn)
     ind2 = findall(x->x>TE/2,tn)
+
+    R₂star = x[2]
+    R₂ = x[3]
+    S₀I=x[1]
+    S₀II=x[4]
+    
     SI_sage[ind1] = x[1].*exp.(-tn[ind1].*x[2]);
     SI_sage[ind2] = (x[4]).*exp.(-TE*(x[2]-x[3])).*exp.(-tn[ind2]*(2*x[3]-x[2]));
     return SI_sage
