@@ -11,6 +11,7 @@ Welcome to the magnetic resonance toolbox. This is intended to become a reposito
 Updates to this will include a tutorial on how to use the code and more detailed documentation. 
 
 **Command Line**
+
 Make sure you change the <PATH> to the absolute path of your SIR data and brain mask.
 ```Bash
 julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data <PATH>/SIR_DATA.nii.gz --SIR_brainMask <PATH>/brain_mask.nii.gz --kmf 14.5 --Sm 0.83
