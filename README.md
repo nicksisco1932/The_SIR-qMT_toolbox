@@ -28,6 +28,12 @@ Representative SIR-qMT on a healthy volunteer. A represents the first data point
   
 # Using Matlab or Python to call Julia examples.
   
+
+# SAGE Fitting call
+```bash
+julia ./SAGE_biexp_fit.jl --TE_nii_names <PATH>/PT1319001_TE1_img_w_Skull.nii.gz <PATH>/PT1319001_TE2_img_w_Skull.nii.gz <PATH>/PT1319001_TE3_img_w_Skull.nii.gz <PATH>/PT1319001_TE4_img_w_Skull.nii.gz <PATH>/PT1319001_TE5_img_w_Skull.nii.gz --SAGE_nii_brainMask <PATH>/bPT1319001_preb_mask.nii.gz --echos 7.82 28.8 60.7 81.6 102.6  
+```
+  
 **Python**
 ```Python
 # A function wrapper to call Julia to fit spin- and gradient-echo signal to a piecewise function using Julia
