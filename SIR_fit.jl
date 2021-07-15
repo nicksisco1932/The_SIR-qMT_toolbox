@@ -17,23 +17,13 @@
 
     User supplied data:
         - Command line usage
-        $ julia -t <threads #> ./SIR_fit.jl <path to Python processed data>
-
-        - In the Python processed directory, there should be nt number of preprocessed nifti files, corresponding 
-        to the number of dynamic time points in the data, e.g. nt = 4 means there are ti = [15,15,...,...], etc.
+        $ julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data <PATH>/SIR_DATA.nii.gz --SIR_brainMask <PATH>/brain_mask.nii.gz --kmf 14.5 --Sm 0.83
 
     Output:
         - The output from this script are three nifti files for the fitting parameters pool size ratio, R1f (free transverse relaxation rate), and Sf (field inhomogeneity)
 
 
     Future Updates TO Do:
-        1) user defined ti and td
-        2) user defined kmf
-        3) user defined preprocessing niftis, i.e. flexible input names
-            - I think we need== ("-i" action => :append_arg)
-            - then called on command line "-i" <value> "-i" <value2>, etc. 
-        4) main function within utils
-        5) module creation
         6) unit testing
         7) depolyable docker
 
@@ -53,6 +43,13 @@
     "0.0  June 21, 2021 [nsisco]\n"
     "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
     "   - Updated I/O \n"
+    "\n",
+    "1.0  June 14, 2021 [nsisco]\n"
+    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
+    "   - Major updated I/O 
+        - Change fitting function and for loop 
+        - Dramatic improvement in speed 
+        \n"
 
 =#
 using NIfTI; 
@@ -60,23 +57,35 @@ using LsqFit;
 using Printf
 using ArgParse;
 
+#=----------------------------------------------
+    Commandline Arguments
+----------------------------------------------
+=#
 include("./utils.jl")
 function commandline()
-        
-
     settings = ArgParseSettings()
 
     @add_arg_table! settings begin
-        "SIR_nii_1"
-        required = true
-        "SIR_nii_2"
-        required = true
-        "SIR_nii_3"
-        required = true
-        "SIR_nii_4"
-        required = true
-        "SIR_nii_brainMask"
-        required = true
+        "--SIR_Data"
+            required = true
+        "--SIR_brainMask"
+            required = true
+        "--TD"
+            nargs = 4
+            arg_type = Float64
+            help = "tD values, 4 required"
+        "--TI"
+            nargs = 4
+            arg_type = Float64
+            help = "tI values, 4 required"
+        "--kmf"
+            nargs = 1
+            arg_type = Float64
+            help = "kmf value, for phantoms this is 35.0 and brains 14.5"
+        "--Sm"
+            nargs = 1
+            arg_type = Float64
+            help = "Sm value, unless >3T this is 0.83"
     end
 
     println(parse_args(settings))
@@ -88,47 +97,115 @@ function commandline()
     return parse_args(settings)
 end
 
-a = commandline()
+#=----------------------------------------------
+    Commandline Arguments END
+----------------------------------------------
+=#
 
-function main()
+#=
+test data /mnt/c/Users/nicks/Documents/MRI_data/PING_brains/TestRetest/output_20210618/proc_20210618/SIR_mo_corr.nii.gz
+test mask /mnt/c/Users/nicks/Documents/MRI_data/PING_brains/TestRetest/output_20210618/proc_20210618/brain_mask.nii.gz
+temp = "/mnt/c/Users/nicks/Documents/MRI_data/PING_brains/TestRetest/output_20210618/proc_20210618/SIR_mo_corr.nii.gz"
+base = dirname(temp)
+paths = [joinpath(base,"SIR_mo_corr.nii.gz")]
+b_fname = joinpath(base,"brain_mask.nii.gz")
+=#
+
+
+function main(a)
     
+    base = dirname(a["SIR_Data"])
+    paths = a["SIR_Data"]
+    b_fname = joinpath(base,basename(a["SIR_brainMask"]))
+ 
+    #=----------------------------------------------
+    Variable Definitions
+    ----------------------------------------------
+    =#
+    # If Error in TD unit handling. If the user puts in ms, convert to s
+    if a["TI"][1]>1
+        ti_times = a["TI"]* 1E-3
+        td_times = a["TD"]* 1E-3
+    else
+        ti_times = a["TI"]
+        td_times = a["TD"]
+    end
+    kmfmat = a["kmf"][1]
+    Smmat=a["Sm"][1]
+    X0 = Array{Float64}([0.07, 1, -1, 1.5]);
 
-    base = dirname(a["SIR_nii_1"])
-    paths = [joinpath(base,basename(a["SIR_nii_1"])),
-        joinpath(base,basename(a["SIR_nii_2"])),
-        joinpath(base,basename(a["SIR_nii_3"])),
-        joinpath(base,basename(a["SIR_nii_4"]))
-        ]
-    b_fname = joinpath(base,basename(a["SIR_nii_brainMask"]))
-    ti_times,td_times,X0 = params();
-    DATA,MASK,nx,ny,nz,nt=load_data(paths,b_fname);
+    #=----------------------------------------------
+    Variable Definitions END
+    ----------------------------------------------
+    =#
 
-    tot_voxels,vec_mask,pre_zeros,times,Yy = reshape_and_normalize(DATA,MASK,ti_times,td_times,nx,ny,nz,nt);
-
-    # It is faster for Julia as it is column major, but I suck at writing in column major. This means I transpose it and retranspose. :(
     thr = Threads.nthreads()
     println("Fitting with $thr threads")
-    ROW_MAJOR = true
-    if ROW_MAJOR
-        fitOUT = timed(tot_voxels,vec_mask,pre_zeros,times,Yy,X0); # row major
-    else
-        colY = Array{Float64}(Yy');
-        col_pre_zeros = Array{Float64}(pre_zeros');
-        fitOUT = timed(tot_voxels,vec_mask,col_pre_zeros,times,colY,X0); # column major
-    end
 
-    if ROW_MAJOR
-        Xv = Array{Float64}(fitOUT);
-    else
-        Xv = Array{Float64}(fitOUT');
+    
+    #=----------------------------------------------
+    Setting up data to be fit
+    ----------------------------------------------
+    =#
+    nx,ny,nz,nt = size(niread(paths))
+    temp=niread(paths)
+    temp2=Array{Float64}(temp.raw)
+    tempdata=Array{Float64}(zeros(nt,nx,ny,nz))
+    for ii in 1:nt
+        tempdata[ii,:,:,:] = temp2[:,:,:,ii];
     end
-    Xv = reshape(Xv,nx,ny,nz,4);
+    DATA=tempdata;
+    MASKtmp = niread(b_fname);
+    MASK=Array{Bool}(MASKtmp.raw);
+
+    tot_voxels,times,Yy = reshape_and_normalize( DATA,ti_times,td_times,nx,ny,nz,nt);
+
+    tmpOUT = Array{Float64}(zeros(4,tot_voxels));
+    vec_mask = reshape(MASK,(tot_voxels));
+
+
+    #=----------------------------------------------
+    Setting up data to be fit END
+    ----------------------------------------------
+    =#
+
+
+    #=----------------------------------------------
+    Fit END
+    ----------------------------------------------
+    =#
+    
+    mag=true;
+    model(x,p) = SIR_Mz0(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true) 
+
+    function f() # anonymous function for fitting
+        begin
+            Threads.@threads for ii in 1:tot_voxels
+                if vec_mask[ii]
+                    tmpOUT[:,ii] = nlsfit(model,times,Yy[:,ii],X0)
+                end #if
+            end #for
+        end #begin
+    end #f()
+
+    @time f() # Fitting call
+
+    #=----------------------------------------------
+    Fit END
+    ----------------------------------------------
+    =#
+
+    #= 
+    Finishing up 
+    =#
+    Xv = tmpOUT;
+    Xv = reshape(Xv,4,nx,ny,nz);
     PSR = zeros(nx,ny,nz);
     R1f = zeros(nx,ny,nz);
     Sf = zeros(nx,ny,nz);
-    PSR = Xv[:,:,:,1]*100;
-    R1f = Xv[:,:,:,2];
-    Sf = Xv[:,:,:,3];
+    PSR = Xv[1,:,:,:]*100;
+    R1f = Xv[2,:,:,:];
+    Sf = Xv[3,:,:,:];
 
 
     PSR[findall(x->x.>100,PSR)].=0
@@ -139,8 +216,7 @@ function main()
     Sf[findall(x->x.>10,Sf)].=0
     Sf[findall(x->x.<-10,Sf)].=0
 
-    d=niread(b_fname);
-    d=niread(paths[1]);
+    d=niread(paths);
 
     tmp1 = voxel_size(d.header)[1]
     tmp2 = voxel_size(d.header)[2]
@@ -150,22 +226,18 @@ function main()
     R1f_fname = @sprintf("%s/SIR_Brain_R1f_julia.nii.gz",base)
     SF_fname = @sprintf("%s/SIR_Brain_Sf_julia.nii.gz",base)
 
-    fname_1 = @sprintf("%s/SIR_T1_1.nii.gz",base)
-    fname_2 = @sprintf("%s/SIR_T1_2.nii.gz",base)
-    fname_3 = @sprintf("%s/SIR_T1_3.nii.gz",base)
-    fname_4 = @sprintf("%s/SIR_T1_4.nii.gz",base)
+    fname_1 = @sprintf("%s/SIR_DATA.nii.gz",base)
     niwrite(PSR_fname,NIVolume(PSR;voxel_size=(tmp1,tmp2,tmp3)))
     niwrite(R1f_fname,NIVolume(R1f;voxel_size=(tmp1,tmp2,tmp3)))
     niwrite(SF_fname,NIVolume(Sf;voxel_size=(tmp1,tmp2,tmp3)))
 
-    niwrite(fname_1,NIVolume(DATA[:,:,:,1];voxel_size=(tmp1,tmp2,tmp3)))
-    niwrite(fname_2,NIVolume(DATA[:,:,:,2];voxel_size=(tmp1,tmp2,tmp3)))
-    niwrite(fname_3,NIVolume(DATA[:,:,:,3];voxel_size=(tmp1,tmp2,tmp3)))
-    niwrite(fname_4,NIVolume(DATA[:,:,:,4];voxel_size=(tmp1,tmp2,tmp3)))
+    niwrite(fname_1,NIVolume(temp2;voxel_size=(tmp1,tmp2,tmp3)))
 
     println("The PSR is saved at $PSR_fname")
     println("The R1f is saved at $R1f_fname")
     println("The Sf is saved at $SF_fname")
+    println("The original data is saved at $fname_1")
 end
 
-main()
+A = commandline()
+@time main(A)

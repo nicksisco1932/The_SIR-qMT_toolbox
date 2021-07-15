@@ -10,6 +10,7 @@ Welcome to the magnetic resonance toolbox. This is intended to become a reposito
 
 Updates to this will include a tutorial on how to use the code and more detailed documentation. 
 
+
 **Command Line**
 
 Make sure you change the <PATH> to the absolute path of your SIR data and brain mask.
