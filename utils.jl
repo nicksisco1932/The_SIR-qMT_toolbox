@@ -111,6 +111,7 @@ function loader(path)
     return Array{Float64}(temp.raw)
 end
 
+#= TO BE DELETED
 # function timed(tot_voxels,mvec::Vector{Bool},tmpOUT::Matrix{Float64},x::Array{Float64},yy::Array{Float64},x0::Array{Float64})::Array{Float64}
     
 #     ind = Vector{Int64}(findall(x->x==Bool(1),mvec)); 
@@ -139,66 +140,129 @@ end
 #     end
 # end
 
-function timed(tot_voxels,mvec::Vector{Bool},tmpOUT::Matrix{Float64},x::Array{Float64},yy::Array{Float64},x0::Array{Float64})
-    @time if Threads.nthreads() == 1
-        for ii in 1:tot_voxels
-            if mvec[ii]
-                fit = curve_fit(SIR_signal_absolute,x,yy[ii,:],x0;autodiff=:finiteforward)
-                tmpOUT[ii,:] = fit.param
-            end
-        end
-    else
-    @time Threads.@threads for ii in 1:tot_voxels
-            if mvec[ii]
-                fit = curve_fit(SIR_signal_absolute,x,yy[ii,:],x0;autodiff=:finiteforward)
-                tmpOUT[ii,:] = fit.param
-            end
+# function timed(tot_voxels,mvec::Vector{Bool},tmpOUT::Matrix{Float64},x::Array{Float64},yy::Array{Float64},x0::Array{Float64})
+#     @time if Threads.nthreads() == 1
+#         for ii in 1:tot_voxels
+#             if mvec[ii]
+#                 fit = curve_fit(SIR_signal_absolute,x,yy[ii,:],x0;autodiff=:finiteforward)
+#                 tmpOUT[ii,:] = fit.param
+#             end
+#         end
+#     else
+#     @time Threads.@threads for ii in 1:tot_voxels
+#             if mvec[ii]
+#                 fit = curve_fit(SIR_signal_absolute,x,yy[ii,:],x0;autodiff=:finiteforward)
+#                 tmpOUT[ii,:] = fit.param
+#             end
+#         end
+#     end
+#     return tmpOUT
+# end
+
+# function R1_minus_plus(R1f::Float64,R1m::Float64,pmf::Float64,kmf::Float64)
+#     # Calculate R1+/- in Eq. 4
+#     R1diff = sqrt((R1f - R1m + (pmf - 1) * kmf)^2 + 4 * pmf * kmf^2)
+#     R1plus = (R1f + R1m + (1 + pmf) * kmf + R1diff) / 2
+#     R1minus = R1plus - R1diff
+#     return R1minus,R1plus,R1diff
+# end
+# function amplitude(R1f::Float64,R1m::Float64,R1minus::Float64,R1diff::Float64,R1plus::Float64)
+#     # Component amplitude terms for td terms (Eq. 5)
+#     bftdplus = -(R1f - R1minus) / R1diff
+#     bftdminus = (R1f - R1plus) / R1diff
+#     bmtdplus = -(R1m - R1minus) / R1diff
+#     bmtdminus = (R1m - R1plus) / R1diff
+#     return bftdplus,bftdminus,bmtdminus,bmtdplus
+# end
+# function signal_recovery(R1plus::Float64,R1minus::Float64,td::Array{Float64},bftdplus::Float64,bftdminus::Float64,bmtdminus::Float64,bmtdplus::Float64)
+#     # Signal recovery during td (Eq. 5)
+#     Mftd = bftdplus .* exp.(-R1plus * td) + bftdminus * exp.(-R1minus * td) .+ 1
+#     Mmtd = bmtdplus .* exp.(-R1plus * td) + bmtdminus * exp.(-R1minus * td) .+ 1
+#     return Mftd,Mmtd
+# end
+# function amplitude_ti(Sf::Float64,Sm::Float64,R1f::Float64,R1minus::Float64,R1plus::Float64,R1diff::Float64,Mftd::Array{Float64},Mmtd::Array{Float64},pmf::Float64,kmf::Float64)
+#     # Component amplitude terms for ti terms (Eq. 5)
+#     bfplus = (
+#             (Sf * Mftd .- 1) * (R1f .- R1minus) .+
+#             (Sf .* Mftd .- Sm * Mmtd) .* pmf .* kmf  ) ./ R1diff
+#     bfminus =
+#         -(
+#             (Sf * Mftd .- 1) * (R1f .- R1plus) .+
+#             (Sf .* Mftd .- Sm * Mmtd) .* pmf .* kmf
+#         ) ./ R1diff
+#     return bfminus,bfplus
+# end
+# function signal_equation(R1plus::Float64,R1minus::Float64,bfplus::Array{Float64},bfminus::Array{Float64},ti::Array{Float64},Mfinf::Float64)
+#      # Signal equation (Eq. 3)
+#      M =
+#      (
+#          bfplus .* exp.(-R1plus .* ti) .+ bfminus .* exp.(-R1minus .* ti) .+
+#          1
+#      ) .* Mfinf
+#      return M
+# end
+=#
+
+function SIR_Mz0(x::Matrix{Float64},p::Vector{Float64}, kmf::Float64;
+    Sm::Float64=0.83, R1m::Float64=NaN, mag::Bool=true)
+
+    # Extract ti and td values from x
+    ti = x[:,1]
+    td = x[:,2]
+
+    # Define model parameters based on p
+    pmf = p[1]
+    R1f = p[2]
+    Sf  = p[3]
+    Mf∞ = p[4]
+
+    # Define R1m based on user-defined value (=R1f when set to NaN)
+    if isnan(R1m)
+        R1m = R1f
+    end
+
+    # Define kfm based on kmf and pmf (assuming mass balance)
+    kfm = kmf*pmf
+
+    # Apparent rate constants
+    ΔR1 = sqrt((R1f-R1m+kfm-kmf)^2.0 + 4.0*kfm*kmf)
+    R1⁺ = (R1f + R1m + kfm + kmf + ΔR1) / 2.0
+    R1⁻ = R1⁺ - ΔR1
+
+    # Component amplitudes for td terms
+    bf_td⁺ = -(R1f - R1⁻) / ΔR1
+    bf_td⁻ =  (R1f - R1⁺) / ΔR1
+    bm_td⁺ = -(R1m - R1⁻) / ΔR1
+    bm_td⁻ =  (R1m - R1⁺) / ΔR1
+
+    # Loop over ti/td values
+    # make this a new function
+    M = similar(ti)
+    for k in 1:length(td)
+
+        # Signal recovery during td
+        E_td⁺ = exp(-R1⁺*td[k])
+        E_td⁻ = exp(-R1⁻*td[k])
+        Mf_td = bf_td⁺*E_td⁺ + bf_td⁻*E_td⁻ + 1.0
+        Mm_td = bm_td⁺*E_td⁺ + bm_td⁻*E_td⁻ + 1.0
+
+        # Component amplitude terms for ti terms
+        a = Sf*Mf_td - 1.0
+        b = (Sf*Mf_td - Sm*Mm_td) * kfm
+        bf_ti⁺ =  (a*(R1f-R1⁻) + b) / ΔR1
+        bf_ti⁻ = -(a*(R1f-R1⁺) + b) / ΔR1
+
+        # Signal recovery during ti
+        M[k] = (bf_ti⁺*exp(-R1⁺*ti[k]) + bf_ti⁻*exp(-R1⁻*ti[k]) + 1.0) * Mf∞
+
+        # Take the magnitude of the signal
+        if mag
+            M[k] = abs(M[k])
         end
     end
-    return tmpOUT
-end
 
-function R1_minus_plus(R1f::Float64,R1m::Float64,pmf::Float64,kmf::Float64)
-    # Calculate R1+/- in Eq. 4
-    R1diff = sqrt((R1f - R1m + (pmf - 1) * kmf)^2 + 4 * pmf * kmf^2)
-    R1plus = (R1f + R1m + (1 + pmf) * kmf + R1diff) / 2
-    R1minus = R1plus - R1diff
-    return R1minus,R1plus,R1diff
-end
-function amplitude(R1f::Float64,R1m::Float64,R1minus::Float64,R1diff::Float64,R1plus::Float64)
-    # Component amplitude terms for td terms (Eq. 5)
-    bftdplus = -(R1f - R1minus) / R1diff
-    bftdminus = (R1f - R1plus) / R1diff
-    bmtdplus = -(R1m - R1minus) / R1diff
-    bmtdminus = (R1m - R1plus) / R1diff
-    return bftdplus,bftdminus,bmtdminus,bmtdplus
-end
-function signal_recovery(R1plus::Float64,R1minus::Float64,td::Array{Float64},bftdplus::Float64,bftdminus::Float64,bmtdminus::Float64,bmtdplus::Float64)
-    # Signal recovery during td (Eq. 5)
-    Mftd = bftdplus .* exp.(-R1plus * td) + bftdminus * exp.(-R1minus * td) .+ 1
-    Mmtd = bmtdplus .* exp.(-R1plus * td) + bmtdminus * exp.(-R1minus * td) .+ 1
-    return Mftd,Mmtd
-end
-function amplitude_ti(Sf::Float64,Sm::Float64,R1f::Float64,R1minus::Float64,R1plus::Float64,R1diff::Float64,Mftd::Array{Float64},Mmtd::Array{Float64},pmf::Float64,kmf::Float64)
-    # Component amplitude terms for ti terms (Eq. 5)
-    bfplus = (
-            (Sf * Mftd .- 1) * (R1f .- R1minus) .+
-            (Sf .* Mftd .- Sm * Mmtd) .* pmf .* kmf  ) ./ R1diff
-    bfminus =
-        -(
-            (Sf * Mftd .- 1) * (R1f .- R1plus) .+
-            (Sf .* Mftd .- Sm * Mmtd) .* pmf .* kmf
-        ) ./ R1diff
-    return bfminus,bfplus
-end
-function signal_equation(R1plus::Float64,R1minus::Float64,bfplus::Array{Float64},bfminus::Array{Float64},ti::Array{Float64},Mfinf::Float64)
-     # Signal equation (Eq. 3)
-     M =
-     (
-         bfplus .* exp.(-R1plus .* ti) .+ bfminus .* exp.(-R1minus .* ti) .+
-         1
-     ) .* Mfinf
-     return M
+    # Return signal
+    return M
 end
 
 function SIR_signal_absolute(x::Matrix{Float64}, p::Vector{Float64})
