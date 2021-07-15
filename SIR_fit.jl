@@ -57,6 +57,10 @@ using LsqFit;
 using Printf
 using ArgParse;
 
+#=----------------------------------------------
+    Commandline Arguments
+----------------------------------------------
+=#
 include("./utils.jl")
 function commandline()
     settings = ArgParseSettings()
@@ -93,7 +97,10 @@ function commandline()
     return parse_args(settings)
 end
 
-a = commandline()
+#=----------------------------------------------
+    Commandline Arguments END
+----------------------------------------------
+=#
 
 #=
 test data /mnt/c/Users/nicks/Documents/MRI_data/PING_brains/TestRetest/output_20210618/proc_20210618/SIR_mo_corr.nii.gz
@@ -105,21 +112,17 @@ b_fname = joinpath(base,"brain_mask.nii.gz")
 =#
 
 
-function main()
+function main(a)
     
     base = dirname(a["SIR_Data"])
     paths = a["SIR_Data"]
-    # paths = [joinpath(base,basename(a["SIR_nii_1"])),
-    #     joinpath(base,basename(a["SIR_nii_2"])),
-    #     joinpath(base,basename(a["SIR_nii_3"])),
-    #     joinpath(base,basename(a["SIR_nii_4"]))
-    #     ]
     b_fname = joinpath(base,basename(a["SIR_brainMask"]))
  
-    # ti_times = Array{Float64}([15, 15, 278, 1007] * 1E-3); # temp hard code
-    # td_times = Array{Float64}([684, 4121, 2730, 10] * 1E-3); # temp hard code
-
-    # Error in TD unit handling. If the user puts in ms, convert to s
+    #=----------------------------------------------
+    Variable Definitions
+    ----------------------------------------------
+    =#
+    # If Error in TD unit handling. If the user puts in ms, convert to s
     if a["TI"][1]>1
         ti_times = a["TI"]* 1E-3
         td_times = a["TD"]* 1E-3
@@ -127,14 +130,23 @@ function main()
         ti_times = a["TI"]
         td_times = a["TD"]
     end
+    kmfmat = a["kmf"][1]
+    Smmat=a["Sm"][1]
     X0 = Array{Float64}([0.07, 1, -1, 1.5]);
+
+    #=----------------------------------------------
+    Variable Definitions END
+    ----------------------------------------------
+    =#
 
     thr = Threads.nthreads()
     println("Fitting with $thr threads")
 
-
-    # The new stuff
-        
+    
+    #=----------------------------------------------
+    Setting up data to be fit
+    ----------------------------------------------
+    =#
     nx,ny,nz,nt = size(niread(paths))
     temp=niread(paths)
     temp2=Array{Float64}(temp.raw)
@@ -146,40 +158,23 @@ function main()
     MASKtmp = niread(b_fname);
     MASK=Array{Bool}(MASKtmp.raw);
 
-    function reshape_and_normalize_phantom(data_4d::Array{Float64},TI::Array{Float64},TD::Array{Float64},NX::Int64,NY::Int64,NZ::Int64,NT)
-        # [pmf R1f Sf M0f]
-
-        tot_voxels = NX*NY*NZ
-        X=hcat(TI,TD)
-        tmp = reshape(data_4d,(NT,tot_voxels));
-        Yy=Array{Float64}(zeros(size(tmp)))
-        
-        for ii in 1:tot_voxels
-            
-            Yy[:,ii] = tmp[:,ii] / (tmp[end, ii])
-            
-        end
-
-        Yy[findall(x->isinf(x),Yy)].=0
-        Yy[findall(x->isnan(x),Yy)].=0
-
-        return tot_voxels,X,Yy
-    end
-
-    tot_voxels,times,Yy = reshape_and_normalize_phantom( DATA,ti_times,td_times,nx,ny,nz,nt);
+    tot_voxels,times,Yy = reshape_and_normalize( DATA,ti_times,td_times,nx,ny,nz,nt);
 
     tmpOUT = Array{Float64}(zeros(4,tot_voxels));
     vec_mask = reshape(MASK,(tot_voxels));
 
-    function nlsfit(f::Function, xvalues::Array{Float64},yvalues::Array{Float64},guesses::Array{Float64})
-        fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
-        return fit.param
-    end
 
-    # kmfmat=14.5; # temp hard code
-    # Smmat=0.83; # temp hard code
-    kmfmat = a["kmf"][1]
-    Smmat=a["Sm"][1]
+    #=----------------------------------------------
+    Setting up data to be fit END
+    ----------------------------------------------
+    =#
+
+
+    #=----------------------------------------------
+    Fit END
+    ----------------------------------------------
+    =#
+    
     mag=true;
     model(x,p) = SIR_Mz0(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true) 
 
@@ -194,6 +189,11 @@ function main()
     end #f()
 
     @time f() # Fitting call
+
+    #=----------------------------------------------
+    Fit END
+    ----------------------------------------------
+    =#
 
     #= 
     Finishing up 
@@ -216,7 +216,6 @@ function main()
     Sf[findall(x->x.>10,Sf)].=0
     Sf[findall(x->x.<-10,Sf)].=0
 
-    # d=niread(b_fname);
     d=niread(paths);
 
     tmp1 = voxel_size(d.header)[1]
@@ -232,16 +231,13 @@ function main()
     niwrite(R1f_fname,NIVolume(R1f;voxel_size=(tmp1,tmp2,tmp3)))
     niwrite(SF_fname,NIVolume(Sf;voxel_size=(tmp1,tmp2,tmp3)))
 
-    # newDATA=zeros(nx,ny,nz,nt);
-    # for ii in 1:nt
-    #     newDATA[:,:,:,ii] = DATA[ii,:,:,:];
-    # end
-
     niwrite(fname_1,NIVolume(temp2;voxel_size=(tmp1,tmp2,tmp3)))
 
     println("The PSR is saved at $PSR_fname")
     println("The R1f is saved at $R1f_fname")
     println("The Sf is saved at $SF_fname")
+    println("The original data is saved at $fname_1")
 end
 
-main()
+A = commandline()
+@time main(A)
