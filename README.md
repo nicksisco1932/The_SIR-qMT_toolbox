@@ -17,8 +17,7 @@ Make sure you change the <PATH> to the absolute path of your SIR data and brain 
 ```Bash
 julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data <PATH>/SIR_DATA.nii.gz --SIR_brainMask <PATH>/brain_mask.nii.gz --kmf 14.5 --Sm 0.83
 ```
-  
-  
+
 **Python**
 ```Python
 # A function wrapper to call Julia to fit spin- and gradient-echo signal to a piecewise function using Julia
