@@ -23,54 +23,27 @@
 
 =#
 
-################################################################################
-##########################  User Supplied Arguments   ##########################
-################################################################################
-function parse_commandline()
-    s = ArgParseSettings()
-
-    @add_arg_table! s begin
-
-        "input"
-        help = "Input path for data. Currently, files should be read in separately."
-        required = true
-        
-    end
-    return parse_args(s)
-end
-
-################################################################################
-##########################  User Supplied Arguments END  #######################
-################################################################################
-
-function reshape_and_normalize(data_4d::Array{Float64},mask_4d::Array{Bool},TI::Array{Float64},TD::Array{Float64},NX,NY,NZ,NT)
+function reshape_and_normalize(data_4d::Array{Float64},TI::Array{Float64},TD::Array{Float64},NX::Int64,NY::Int64,NZ::Int64,NT)
     # [pmf R1f Sf M0f]
-    X=hcat(TI,TD)
-    tmp = reshape(data_4d,(NX*NY*NZ,NT));
-    tmpOUT = Array{Float64}(zeros(NX*NY*NZ,NT));
-    vec_mask=reshape(mask_4d,(NX*NY*NZ))
-    Yy=Array{Float64}(zeros(size(tmp)))
 
     tot_voxels = NX*NY*NZ
-
-    mvec = vec_mask
-    for ii = 1:tot_voxels
-        if mvec[ii]
-            Yy[ii,:] = tmp[ii, :] / (tmp[ii, end])
-        end
+    X=hcat(TI,TD)
+    tmp = reshape(data_4d,(NT,tot_voxels));
+    Yy=Array{Float64}(zeros(size(tmp)))
+    
+    for ii in 1:tot_voxels
+        Yy[:,ii] = tmp[:,ii] / (tmp[end, ii])
     end
 
     Yy[findall(x->isinf(x),Yy)].=0
     Yy[findall(x->isnan(x),Yy)].=0
 
-    return tot_voxels,vec_mask,tmpOUT,X,Yy
+    return tot_voxels,X,Yy
 end
 
-function params()
-    inversion_time = Array{Float64}([15, 15, 278, 1007] * 1E-3);
-    delay_time = Array{Float64}([684, 4121, 2730, 10] * 1E-3);
-    X0 = Array{Float64}([0.1, 1, -0.95, 1]);
-    return inversion_time, delay_time, X0
+function nlsfit(f::Function, xvalues::Array{Float64},yvalues::Array{Float64},guesses::Array{Float64})
+    fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
+    return fit.param
 end
 
 function load_sage_data(paths,b_fname)
@@ -265,134 +238,7 @@ function SIR_Mz0(x::Matrix{Float64},p::Vector{Float64}, kmf::Float64;
     return M
 end
 
-function SIR_signal_absolute(x::Matrix{Float64}, p::Vector{Float64})
-#=
-    # Selective inversion recovery signal for fitting absolute value siganl
 
-    - Requirements
-    1) R1_minus_plus
-    2) amplitude
-    3) signal_recovery
-    4) amplitude_ti
-    5) signal_equation
-
-    - Constants
-        * currently there are only two constants that can be fixed in later versions.
-            - kmf is held constant at 14.5 for human brains and 35 for phantoms
-            - Sm is held constant at 0.83 
-=#
-    ti = x[:,1]
-    td = x[:,2]
-    kmf = 14.5; # not sure how to pass kwargs to this function using curve fit
-    # kmf = 35.0
-    M0 = [1, p[1]] * p[4]
-    R1 = [p[2], p[2]]
-    S = [p[3], 0.83]
-    # Get pmf and Mfinf
-    pmf = M0[2] / M0[1]
-    Mfinf = M0[1]
-
-    # Get R1f/R1m and Sf/Sm
-    R1f = R1[1]
-    R1m = R1[2]
-    Sf = S[1]
-    Sm = S[2]
-
-    R1diff = sqrt((R1f - R1m + (pmf - 1) * kmf)^2 + 4 * pmf * kmf^2)
-    R1plus = (R1f + R1m + (1 + pmf) * kmf + R1diff) / 2
-    R1minus = R1plus - R1diff
-    # Component amplitude terms for td terms (Eq. 5)
-    bftdplus = -(R1f - R1minus) / R1diff
-    bftdminus = (R1f - R1plus) / R1diff
-    bmtdplus = -(R1m - R1minus) / R1diff
-    bmtdminus = (R1m - R1plus) / R1diff
-    # Signal recovery during td (Eq. 5)
-    Mftd = bftdplus .* exp.(-R1plus * td) + bftdminus * exp.(-R1minus * td) .+ 1
-    Mmtd = bmtdplus .* exp.(-R1plus * td) + bmtdminus * exp.(-R1minus * td) .+ 1
-    # Component amplitude terms for ti terms (Eq. 5)
-    bfplus = (
-            (Sf * Mftd .- 1) * (R1f .- R1minus) .+
-            (Sf .* Mftd .- Sm * Mmtd) .* pmf .* kmf  ) ./ R1diff
-    bfminus =
-        -(
-            (Sf * Mftd .- 1) * (R1f .- R1plus) .+
-            (Sf .* Mftd .- Sm * Mmtd) .* pmf .* kmf
-        ) ./ R1diff
-
-
-
-     # Signal equation (Eq. 3)
-     Mm =
-     (
-         bfplus .* exp.(-R1plus .* ti) .+ bfminus .* exp.(-R1minus .* ti) .+
-         1
-     ) .* Mfinf
-
-    # R1minus,R1plus,R1diff = R1_minus_plus(R1f,R1m,pmf,kmf)
-    # bftdplus,bftdminus,bmtdminus,bmtdplus = amplitude(R1f,R1m,R1minus,R1diff,R1plus)
-    # Mftd,Mmtd = signal_recovery(R1plus,R1minus,td,bftdplus,bftdminus,bmtdminus,bmtdplus)
-    # bfminus,bfplus = amplitude_ti(Sf,Sm,R1f,R1minus,R1plus,R1diff,Mftd,Mmtd,pmf,kmf)
-    # Mm = signal_equation(R1plus,R1minus,bfplus,bfminus,ti,Mfinf)
-    M = abs.(Mm)
-    return M 
-end
-
-function SIR_signal(x::Matrix{Float64},p::Vector{Float64})
-
-    # Selective inversion recovery signal for fitting/simulating  siganl
-
-    # THis is more or less for plotting
-    ti = x[:,1]
-    td = x[:,2]
-    kmf = 14.5
-    M0 = [1, p[1]] * p[4]
-    R1 = [p[2], p[2]]
-    S = [p[3], 0.83]
-    # Get pmf and Mfinf
-    pmf = M0[2] / M0[1]
-    Mfinf = M0[1]
-
-    # Get R1f/R1m and Sf/Sm
-    R1f = R1[1]
-    R1m = R1[2]
-    Sf = S[1]
-    Sm = S[2]
-
-    # Calculate R1+/- in Eq. 4
-    R1diff = sqrt((R1f - R1m + (pmf - 1) * kmf)^2 + 4 * pmf * kmf^2)
-    R1plus = (R1f + R1m + (1 + pmf) * kmf + R1diff) / 2
-    R1minus = R1plus - R1diff
-
-    # Component amplitude terms for td terms (Eq. 5)
-    bftdplus = -(R1f - R1minus) / R1diff
-    bftdminus = (R1f - R1plus) / R1diff
-    bmtdplus = -(R1m - R1minus) / R1diff
-    bmtdminus = (R1m - R1plus) / R1diff
-
-    # Signal recovery during td (Eq. 5)
-    Mftd = bftdplus .* exp.(-R1plus * td) + bftdminus * exp.(-R1minus * td) .+ 1
-    Mmtd = bmtdplus .* exp.(-R1plus * td) + bmtdminus * exp.(-R1minus * td) .+ 1
-
-    # Component amplitude terms for ti terms (Eq. 5)
-    bfplus =
-        (
-            (Sf * Mftd .- 1) * (R1f .- R1minus) .+
-            (Sf .* Mftd .- Sm * Mmtd) .* pmf .* kmf
-        ) ./ R1diff
-    bfminus =
-        -(
-            (Sf * Mftd .- 1) * (R1f .- R1plus) .+
-            (Sf .* Mftd .- Sm * Mmtd) .* pmf .* kmf
-        ) ./ R1diff
-
-    # Signal equation (Eq. 3)
-    M =
-        (
-            bfplus .* exp.(-R1plus .* ti) .+ bfminus .* exp.(-R1minus .* ti) .+
-            1
-        ) .* Mfinf
-    return M
-end
 
 function nlsFit_MFA(mask::Vector{Bool},tr::Float64,flip_angles::Vector{Float64},yData::Array{Float64},alpha::Float64)
     n,nt = size(yData)
