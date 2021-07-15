@@ -129,28 +129,20 @@ function commandline()
     settings = ArgParseSettings()
 
     @add_arg_table! settings begin
-        "TE_nii_1"
-        required = true
-        "TE_nii_2"
-        required = true
-        "TE_nii_3"
-        required = true
-        "TE_nii_4"
-        required = true
-        "TE_nii_5"
-        required = true
-        "SAGE_nii_brainMask"
-        required = true
-        "TE1"
-        required = true
-        "TE2"
-        required = true
-        "TE3"
-        required = true
-        "TE4"
-        required = true
-        "TE5"
-        required = true
+        "--TE_nii_names"
+            nargs=5
+            arg_type = String
+            required = true
+        # "--TE_nii_2"
+        #     required = true
+        # "--TE_nii_3"
+        #     required = true
+        # "--TE_nii_4"
+        #     required = true
+        # "--TE_nii_5"
+        #     required = true
+        "--SAGE_nii_brainMask"
+            required = true
         "--echos"
             nargs = 5
             arg_type = Float64
@@ -189,13 +181,20 @@ function main()
     
 
 
-    base = dirname(a["TE_nii_1"])
+    base = dirname(a["TE_nii_names"][1])
+    # paths = [
+    #     joinpath(base,basename(a["TE_nii_1"])),
+    #     joinpath(base,basename(a["TE_nii_2"])),
+    #     joinpath(base,basename(a["TE_nii_3"])),
+    #     joinpath(base,basename(a["TE_nii_4"])),
+    #     joinpath(base,basename(a["TE_nii_5"]))
+    #     ]
     paths = [
-        joinpath(base,basename(a["TE_nii_1"])),
-        joinpath(base,basename(a["TE_nii_2"])),
-        joinpath(base,basename(a["TE_nii_3"])),
-        joinpath(base,basename(a["TE_nii_4"])),
-        joinpath(base,basename(a["TE_nii_5"]))
+        joinpath(base,basename(a["TE_nii_names"][1])),
+        joinpath(base,basename(a["TE_nii_names"][2])),
+        joinpath(base,basename(a["TE_nii_names"][3])),
+        joinpath(base,basename(a["TE_nii_names"][4])),
+        joinpath(base,basename(a["TE_nii_names"][5]))
         ]
     b_fname = joinpath(base,basename(a["SAGE_nii_brainMask"]))
 
@@ -228,8 +227,9 @@ function main()
     echos=Array{Float64}([te1,te2,te3,te4,te5])
 
 =# 
-    echos = Array{Float64}(parse(Float64,a["echos"]))
+    echos = Array{Float64}(a["echos"])
     if echos[1]>1
+        println("Converting to seconds")
         echos = echos.* 1E-3
     else
         echos = echos;
@@ -281,9 +281,9 @@ function main()
                             # d = STE2_pre[ii,jj,kk,bb];
                             e = ste5[ii,jj,kk,bb];
                             # f = STE5_pre[ii,jj,kk,bb];
-                            ste0 = a*(a/c)^(te1/(te2-te1))
-                            R₂star_log[ii,jj,kk,bb] = log( (a) / (c)) /(te2-te1)
-                            R₂_log[ii,jj,kk,bb] = log( (ste0 / e)) /te5
+                            ste0 = a*(a/c)^(echos[1]/(echos[2]-echos[1]))
+                            R₂star_log[ii,jj,kk,bb] = log( (a) / (c)) /(echos[2]-echos[1])
+                            R₂_log[ii,jj,kk,bb] = log( (ste0 / e)) /echos[5]
                         end
                     end
                 end
@@ -302,11 +302,6 @@ function main()
     # @time work(IND,SAGE_biexp3p_d,echos,vec_data[:,:,1],X0,tempFit_data,1)
 =#
 
-    R2fit = zeros(nx,ny,nz,nt);
-    R2sfit = zeros(nx,ny,nz,nt);
-    
-    newDATA = zeros(nx,ny,nz,nt,ne);
-    
     function sage_ns(echotimes,p)
         x=echotimes;
         TE=x[end];
@@ -326,62 +321,38 @@ function main()
         return M
     end
 
-    function sqerrorSAGE(betas::Vector{Float64}, X::Vector{Float64}, Y::Vector{Float64}) 
-        err = 0.0
-        pred_i = sage_ns(X,betas)
-        for ii in 1:length(Y)
-            err += (abs.(pred_i[ii])-Y[ii]).^2
-        end
-        return err
-    end
-    
-    #= Too slow
-    x0 = zeros(4,1)
-    @time for ii in 1:nx
-        for jj in 1:ny
-            for kk in 1:nz
-                if MASK[ii,jj,kk]
-                    Threads.@threads for bb = 1:nt
-                        x0[1] = maximum(DATA[ii,jj,kk,:,bb])
-                        x0[2] = R₂star_log[ii,jj,kk,bb]
-                        x0[3] = R₂_log[ii,jj,kk,bb]
-                        x0[4] = 1
-                        model(echos,x0) = sage_ns(echos,x0)
-                        # fit = nlsfit(model,echos,DATA[ii,jj,kk,:,bb],x0)
-                        fit = Optim.minimizer(optimize(b -> sqerrorSAGE(b, echos,  DATA[IND[1],:,1]), X0))
-                        R2sfit[ii,jj,kk,bb] = fit[2]
-                        R2fit[ii,jj,kk,bb] = fit[3]
-                    end
-                end
-            end
-        end
-    end
-=#
-
     vec_R2fit = zeros(tot_voxels,nt);
     vec_R2sfit = zeros(tot_voxels,nt);
     vec_R2_log = reshape(R₂_log,tot_voxels,nt);
     vec_R2s_log = reshape(R₂star_log,tot_voxels,nt);
 
-    x0 = zeros(4,1)
-    for dynamics in 1:nt
-        @time for vox in 1:tot_voxels
-            if vec_mask[vox]
-                x0[1] = maximum(vec_data[vox,:,dynamics])
-                x0[2] = vec_R2s_log[vox,dynamics]
-                x0[3] = vec_R2_log[vox,dynamics]
-                x0[4] = 1
-                println(x0)
-                model(xs,p) = sage_ns(echos,x0)
-                fit = nlsfit(model,echos,vec_data[vox,:,dynamics],x0)
-                # fit = Optim.minimizer(optimize(b -> sqerrorSAGE(b, echos,  DATA[IND[1],:,1]), x0))
-                # vec_R2sfit[vox,:,dynamics] = fit[2];
-                # vec_R2fit[vox,:,dynamics] = fit[3];
-            end
-        end
-        println("Done with Fit $dynamics of $nt")
+    x0 = Vector{Float64}(zeros(4))
+    
+    function fguess(guess,y,vec_r2s_log,vec_r2_log)
+        guess[1] = maximum(y)
+        guess[2] = vec_r2s_log
+        guess[3] = vec_r2_log
+        guess[4] = 1
+        return guess
     end
 
+    tmpOUT = Array{Float64}(zeros(tot_voxels,4,nt));
+
+    begin
+        @time for dynamics in 1:nt
+            for vox in 1:tot_voxels
+                if vec_mask[vox]
+                    X0 = fguess(x0,vec_data[vox,:,dynamics],vec_R2s_log[vox,dynamics],vec_R2_log[vox,dynamics])
+                    tmpOUT[vox,:,dynamics] = nlsfit(sage_ns,echos,vec_data[vox,:,dynamics],X0)
+                end
+            end
+            println("Done with Fit $dynamics of $nt")
+        end    
+    end
+    
+    vec_R2sfit = tmpOUT[:,2,:]
+    vec_R2fit = tmpOUT[:,3,:]
+    #=
     @time for JJ=1:nt;
         temp = vec_data[:,:,JJ]
         tempFit_data = fitdata[:,:,JJ]
@@ -389,17 +360,20 @@ function main()
         
         println("Done with Fit $JJ of $nt")
     end
+    =#
     #-------------------------------------  
-    Xv = Array{Float64}(fitdata);
-    Xv = reshape(Xv,nx,ny,nz,4,nt);
-    R2s = zeros(nx,ny,nz,nt);
-    R2 = zeros(nx,ny,nz,nt);
-    R2s = Xv[:,:,:,2,:];
-    R2 = Xv[:,:,:,3,:];
-    R2s[findall(x->x.>1000,R2s)].=0
-    R2s[findall(x->x.<0,R2s)].=0
-    R2[findall(x->x.>1000,R2)].=0
-    R2[findall(x->x.<0,R2)].=0
+    # Xv = Array{Float64}(fitdata);
+    # Xv = reshape(Xv,nx,ny,nz,4,nt);
+    # R2s = zeros(nx,ny,nz,nt);
+    # R2 = zeros(nx,ny,nz,nt);
+    # R2s = Xv[:,:,:,2,:];
+    # R2 = Xv[:,:,:,3,:];
+    R2s = reshape(vec_R2sfit,nx,ny,nz,nt);
+    R2 = reshape(vec_R2fit,nx,ny,nz,nt);
+    R2s[findall(x->x.>1000,R2s)].=0;
+    R2s[findall(x->x.<0,R2s)].=0;
+    R2[findall(x->x.>1000,R2)].=0;
+    R2[findall(x->x.<0,R2)].=0;
     #-------------------------------------
 
     d=niread(paths[1]);
