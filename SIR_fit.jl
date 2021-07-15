@@ -27,13 +27,6 @@
 
 
     Future Updates TO Do:
-        1) user defined ti and td
-        2) user defined kmf
-        3) user defined preprocessing niftis, i.e. flexible input names
-            - I think we need== ("-i" action => :append_arg)
-            - then called on command line "-i" <value> "-i" <value2>, etc. 
-        4) main function within utils
-        5) module creation
         6) unit testing
         7) depolyable docker
 
@@ -128,8 +121,13 @@ function main()
 
     # ti_times = Array{Float64}([15, 15, 278, 1007] * 1E-3);
     # td_times = Array{Float64}([684, 4121, 2730, 10] * 1E-3);
-    ti_times = a["TI"]
-    td_times = a["TD"]
+    if a["TI"][1]>1
+        ti_times = a["TI"]* 1E-3
+        td_times = a["TD"]* 1E-3
+    else
+        ti_times = a["TI"]
+        td_times = a["TD"]
+    end
     X0 = Array{Float64}([0.07, 1, -1, 1.5]);
 
     thr = Threads.nthreads()
@@ -151,25 +149,11 @@ function main()
 
     # The new stuff
         
-    # function load_data(paths)
-    #     data1 = niread(paths);
-        
-    #     nx,ny,nz,nt = size(data1);
-    #     if nz ==1
-    #         temp=Array{Float64}(data1.raw)
-    #         DATA = dropdims(temp;dims=3);
-    #     else
-    #         temp=Array{Float64}(data1.raw)
-    #         DATA=temp;
-    #     end
-    #     return DATA,nx,ny,nz,nt    
-    # end
     nx,ny,nz,nt = size(niread(paths))
     temp=niread(paths)
     temp2=Array{Float64}(temp.raw)
     tempdata=Array{Float64}(zeros(nt,nx,ny,nz))
     for ii in 1:nt
-
         tempdata[ii,:,:,:] = temp2[:,:,:,ii];
     end
     DATA=tempdata;
@@ -216,7 +200,7 @@ function main()
     function f() # anonymous function for fitting
         begin
             Threads.@threads for ii in 1:tot_voxels
-                if MASK[ii]
+                if vec_mask[ii]
                     tmpOUT[:,ii] = nlsfit(model,times,Yy[:,ii],X0)
                 end #if
             end #for
@@ -262,12 +246,12 @@ function main()
     niwrite(R1f_fname,NIVolume(R1f;voxel_size=(tmp1,tmp2,tmp3)))
     niwrite(SF_fname,NIVolume(Sf;voxel_size=(tmp1,tmp2,tmp3)))
 
-    newDATA=zeros(nx,ny,nz,nt);
-    for ii in 1:nt
-        newDATA[:,:,:,ii] = DATA[ii,:,:,:];
-    end
+    # newDATA=zeros(nx,ny,nz,nt);
+    # for ii in 1:nt
+    #     newDATA[:,:,:,ii] = DATA[ii,:,:,:];
+    # end
 
-    niwrite(fname_1,NIVolume(newDATA;voxel_size=(tmp1,tmp2,tmp3)))
+    niwrite(fname_1,NIVolume(temp2;voxel_size=(tmp1,tmp2,tmp3)))
 
     println("The PSR is saved at $PSR_fname")
     println("The R1f is saved at $R1f_fname")
