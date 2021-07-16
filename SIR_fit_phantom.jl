@@ -120,7 +120,7 @@ println("Fitting with $thr threads")
 tmpOUT = Array{Float64}(zeros(4,tot_voxels));
 # IND = findall(x->x>0,Yy[:,1])
 
-function nlsfit(f::Function, xvalues::Array{Float64},yvalues::Array{Float64},guesses::Array{Float64})
+function nlsfit_1(f::Function, xvalues::Array{Float64},yvalues::Array{Float64},guesses::Array{Float64})
     fit = curve_fit(f,xvalues,yvalues,guesses)
     return fit.param
 end
@@ -133,7 +133,7 @@ model(x,p) = SIR_Mz0(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)
 function f()
     begin
         Threads.@threads for ii in 1:tot_voxels
-            tmpOUT[:,ii] = nlsfit(model,times,Yy[:,ii],X0)
+            tmpOUT[:,ii] = nlsfit_1(model,times,Yy[:,ii],X0)
         end 
     end
 end
