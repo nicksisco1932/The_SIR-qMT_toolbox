@@ -158,7 +158,7 @@ function commandline()
     return parse_args(settings)
 end
 
-a = commandline()
+A = commandline()
 
 function optim_fitty(f::Function, xdata::Vector{Float64},data::Vector{Float64},x0::Vector{Float64})
     # fitdata = Optim.minimizer( optimize(b -> sqerrorSAGE(b, xdata,  data), x0))
@@ -177,7 +177,137 @@ function work(IND::Vector{Int64},f::Function,echos::Vector{Float64},vec_data::Ar
     return fitdata
 end
 
-function main()
+function fguess(guess::Vector{Float64},y::Vector{Float64},vec_r2s_log::Float64,vec_r2_log::Float64)
+    guess[1] = maximum(y)
+    guess[2] = vec_r2s_log
+    if vec_r2_log<0
+        guess[3]=10
+    else
+        guess[3] = vec_r2_log # sometimes the log ratio makes this negative.
+    end
+    guess[4] = 0
+    return guess
+end
+
+function sage_ns(echotimes::Vector{Float64},p::Vector{Float64})
+    # this is the fastest way to get the signal 
+    τ=echotimes;
+    TEₛₑ=τ[end];
+    S₀I = p[1]
+    R₂star = p[2]
+    R₂ = p[3]
+    S₀II = p[4]
+
+    M = similar(τ)
+    for (n,k) in enumerate(τ)
+        if k < TEₛₑ/2
+            M[n] = S₀I * exp(-k * R₂star)
+        elseif   k >= TEₛₑ/2
+            M[n] = S₀II * exp(-TEₛₑ * (R₂star - R₂) * exp(-k * (2*R₂-R₂star) ) )
+        end
+    end
+    return M
+end
+
+function sqerrorSAGE2(betas::Vector{Float64}, X::Vector{Float64}, Y::Vector{Float64})
+    err = 0.0
+    pred_i = sage_ns(X,betas)
+    for (n,ii) in enumerate( Y)
+        
+        err += (ii -pred_i[n]).^2
+    end
+    return err
+end
+
+function linearize(nx::Int64,ny::Int64,nz::Int64,ne::Int64,nt::Int64,data::Array{Float64},mask::Array{Bool},echos::Vector{Float64})
+    te1=echos[1];
+    te2=echos[2];
+    te3=echos[3];
+    te4=echos[4];
+    te5=echos[5];
+    tot_voxels=nx*ny*nz
+        
+    # newDATA=zeros(ne,nx,ny,nz,nt);
+
+    # for ii in 1:nx
+    #     for jj in 1:ny
+    #         for kk in 1:nz
+    #             for tt in 1:nt
+    #                 if mask[ii,jj,kk]
+    #                     newDATA[:,ii,jj,kk,tt] = data[ii,jj,kk,:,tt]
+    #                 end
+    #             end
+    #         end
+    #     end
+    # end
+
+
+    # STE1=zeros(nx,ny,nz);
+    # STE2=similar(STE1);
+    # STE5=similar(STE1);
+    # begin
+    #     for ii in 1:nx
+    #         for jj in 1:ny
+    #             for kk in 1:nz
+    #                 STE1[ii,jj,kk] = mean(data[ii,jj,kk,1,1:15]);
+    #                 STE2[ii,jj,kk] = mean(data[ii,jj,kk,2,1:15]);
+    #                 STE5[ii,jj,kk] = mean(data[ii,jj,kk,5,1:15]);
+    #             end
+    #         end
+    #     end
+    # end
+
+    # STE1_pre = repeat(STE1,1,1,1,150);
+    # STE2_pre = repeat(STE1,1,1,1,150);
+    # STE5_pre = repeat(STE1,1,1,1,150);
+
+    ste1 = data[:,:,:,1,:];
+    ste2 = data[:,:,:,2,:];
+    ste5 = data[:,:,:,5,:];
+
+
+    
+    R₂star_log = similar(ste1);
+    R₂_log = similar(ste1);
+
+    IND=findall(x->x==true,mask);
+    begin
+        for ii in 1:nx
+            for jj in 1:ny
+                for kk in 1:nz
+                    if mask[ii,jj,kk]
+                        for bb = 1:nt
+                            a = ste1[ii,jj,kk,bb];
+                            # b = STE1_pre[ii,jj,kk,bb];
+                            c = ste2[ii,jj,kk,bb];
+                            # d = STE2_pre[ii,jj,kk,bb];
+                            e = ste5[ii,jj,kk,bb];
+                            # f = STE5_pre[ii,jj,kk,bb];
+                            ste0 = a*(a/c)^(te1/(te2-te1));
+                            R₂star_log[ii,jj,kk,bb] = log( (a) / (c)) /(te2-te1);
+                            R₂_log[ii,jj,kk,bb] = log( (ste0 / e)) /te5
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+
+    vec_R2fit = zeros(tot_voxels,nt);
+    vec_R2sfit = zeros(tot_voxels,nt);
+    vec_R2_log = reshape(R₂_log,tot_voxels,nt);
+    vec_R2s_log = reshape(R₂star_log,tot_voxels,nt);
+    # vec_R2fit = zeros(nx*ny*nz*nt,4);
+    # vec_R2sfit = zeros(nx*ny*nz*nt,4);
+    # vec_R2_log = reshape(R₂_log,nx*ny*nz*nt);
+    # vec_R2s_log = reshape(R₂star_log,nx*ny*nz*nt);
+    tmpOUT=Array{Float64}(zeros(nx*ny*nz,4,nt));
+
+    return vec_R2_log,vec_R2s_log,vec_R2sfit,vec_R2fit,tmpOUT,R₂star_log,R₂_log
+end
+
+function main(a)
     
 
 
@@ -208,9 +338,6 @@ function main()
     # vec_mask = reshape(MASK,tot_voxels,1)
     
 
-    
-
-
 #= Long comment
     te1=0.00782;
     te2=0.028769;
@@ -240,110 +367,21 @@ function main()
     X0=[1000,100.0,50,100]
     IND=findall(x->x.>0,vec_mask[:,1]);
 
-    STE1=zeros(nx,ny,nz)
-    STE2=similar(STE1)
-    STE5=similar(STE1)
-    begin
-        for ii in 1:nx
-            for jj in 1:ny
-                for kk in 1:nz
-                    STE1[ii,jj,kk] = mean(DATA[ii,jj,kk,1,1:15]);
-                    STE2[ii,jj,kk] = mean(DATA[ii,jj,kk,2,1:15]);
-                    STE5[ii,jj,kk] = mean(DATA[ii,jj,kk,5,1:15]);
-                end
-            end
-        end
-    end
-
-    STE1_pre = repeat(STE1,1,1,1,150);
-    STE2_pre = repeat(STE1,1,1,1,150);
-    STE5_pre = repeat(STE1,1,1,1,150);
-
-    ste1 = DATA[:,:,:,1,:];
-    ste2 = DATA[:,:,:,2,:];
-    ste5 = DATA[:,:,:,5,:];
-
-
-    
-    R₂star_log = similar(STE1_pre);
-    R₂_log = similar(STE1_pre);
-
-    IND=findall(x->x==true,MASK);
-    begin
-        for ii in 1:nx
-            for jj in 1:ny
-                for kk in 1:nz
-                    if MASK[ii,jj,kk]
-                        for bb = 1:nt
-                            a = ste1[ii,jj,kk,bb];
-                            # b = STE1_pre[ii,jj,kk,bb];
-                            c = ste2[ii,jj,kk,bb];
-                            # d = STE2_pre[ii,jj,kk,bb];
-                            e = ste5[ii,jj,kk,bb];
-                            # f = STE5_pre[ii,jj,kk,bb];
-                            ste0 = a*(a/c)^(echos[1]/(echos[2]-echos[1]))
-                            R₂star_log[ii,jj,kk,bb] = log( (a) / (c)) /(echos[2]-echos[1])
-                            R₂_log[ii,jj,kk,bb] = log( (ste0 / e)) /echos[5]
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-
-    fitdata = zeros(tot_voxels,4,nt);
-#= Testing
-    # Threads.@threads for ii in IND
-        
-    #     fitY = optim_fitty(SAGE_biexp3p_d, echos, vec_data[ii,:,1], X0)
-    # end
-    # tempFit_data = fitdata[:,:,1]
-    # @time work(IND,SAGE_biexp3p_d,echos,vec_data[:,:,1],X0,tempFit_data,1)
-=#
-
-    function sage_ns(echotimes,p)
-        x=echotimes;
-        TE=x[end];
-        R₂star = p[2]
-        R₂ = p[3]
-        S₀I = p[1]
-        S₀II = p[4]
-
-        M = similar(echotimes)
-        for k in 1:length(echotimes)
-            if x[k]<TE/2
-                M[k] = S₀I * exp(-x[k] * R₂star)
-            elseif x[k]>TE/2
-                M[k] = S₀II * exp(-TE * (R₂star - R₂) * exp(-x[k] * (2*R₂-R₂star)))
-            end
-        end
-        return M
-    end
-
-    vec_R2fit = zeros(tot_voxels,nt);
-    vec_R2sfit = zeros(tot_voxels,nt);
-    vec_R2_log = reshape(R₂_log,tot_voxels,nt);
-    vec_R2s_log = reshape(R₂star_log,tot_voxels,nt);
+    vec_R2_log,vec_R2s_log,vec_R2sfit,vec_R2fit,tmpOUT,R₂star_log,R₂_log = linearize(nx,ny,nz,ne,nt,DATA,MASK,echos)
 
     x0 = Vector{Float64}(zeros(4))
-    
-    function fguess(guess,y,vec_r2s_log,vec_r2_log)
-        guess[1] = maximum(y)
-        guess[2] = vec_r2s_log
-        guess[3] = vec_r2_log
-        guess[4] = 1
-        return guess
-    end
 
     tmpOUT = Array{Float64}(zeros(tot_voxels,4,nt));
 
     begin
         @time for dynamics in 1:nt
-            for vox in 1:tot_voxels
+            @time for vox in 1:tot_voxels
                 if vec_mask[vox]
-                    X0 = fguess(x0,vec_data[vox,:,dynamics],vec_R2s_log[vox,dynamics],vec_R2_log[vox,dynamics])
-                    tmpOUT[vox,:,dynamics] = nlsfit(sage_ns,echos,vec_data[vox,:,dynamics],X0)
+                    initial = fguess(x0,vec_data[vox,:,dynamics],vec_R2s_log[vox,dynamics],vec_R2_log[vox,dynamics])
+                    # tmpOUT[vox,:,dynamics] = nlsfit(sage_ns,echos,vec_data[vox,:,dynamics],initial)
+                    tmpOUT[vox,:,dynamics] = nlsfit(SAGE_biexp4p_d,echos,vec_data[vox,:,dynamics],initial)
+                    # tmpOUT[vox,:,dynamics] = nlsfit(sage_ns,echos,vec_data[vox,:,dynamics],[100.0;50;25;0])
+                    # tmpOUT[vox,:,dynamics] = Optim.minimizer(optimize(b -> sqerrorSAGE2(b, echos,  vec_data[vox,:,dynamics]), initial; autodiff = :forward))
                 end
             end
             println("Done with Fit $dynamics of $nt")
@@ -398,6 +436,14 @@ function main()
     temp2 = NIVolume(R₂_log;voxel_size=(tmp1,tmp2,tmp3));
     niwrite(R2_fname_log,temp2)
 
+    R2s_fname_log = @sprintf("%s/SAGE_R2s_Brain_residual_fit_m_log.nii.gz",base)
+    R2_fname_log = @sprintf("%s/SAGE_R2_Brain_residual_fit_m_log.nii.gz",base)
+    temp1 = NIVolume(R2s .- R₂star_log;voxel_size=(tmp1,tmp2,tmp3));
+    niwrite(R2s_fname_log,temp1)
+    temp2 = NIVolume(R2 .- R₂_log;voxel_size=(tmp1,tmp2,tmp3));
+    niwrite(R2_fname_log,temp2)
+
+
     println("The R2s is saved at $R2s_fname")
     println("The R2 is saved at $R2_fname")
 
@@ -410,4 +456,4 @@ function main()
 
 end
 
-main()
+main(A)
