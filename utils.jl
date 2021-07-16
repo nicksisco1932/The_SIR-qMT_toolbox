@@ -333,9 +333,7 @@ end
     return out
 end
 
-function SAGE_biexp3p_d(te,x)
-    dtemp=1;
-    #x should be [SI_I R2s R2] where SI_I = SI_II; 
+function SAGE_biexp4p_d(te,x)
     tn=te;
     TE=te[end];
     SI_sage = zeros(size(tn));
@@ -344,10 +342,10 @@ function SAGE_biexp3p_d(te,x)
     ind1 = findall(x->x<TE/2,tn)
     ind2 = findall(x->x>TE/2,tn)
 
-    R₂star = x[2]
-    R₂ = x[3]
-    S₀I=x[1]
-    S₀II=x[4]
+    # R₂star = x[2]
+    # R₂ = x[3]
+    # S₀I=x[1]
+    # S₀II=x[4]
     
     SI_sage[ind1] = x[1].*exp.(-tn[ind1].*x[2]);
     SI_sage[ind2] = (x[4]).*exp.(-TE*(x[2]-x[3])).*exp.(-tn[ind2]*(2*x[3]-x[2]));
@@ -356,10 +354,19 @@ end
 ## Optim Tricks
 function sqerrorSAGE(betas::Vector{Float64}, X::Vector{Float64}, Y::Vector{Float64})
     err = 0.0
-    pred_i = SAGE_biexp3p_d(X,betas)
+    pred_i = SAGE_biexp4p_d(X,betas)
     for ii in 1:length(Y)
         err += (abs.(pred_i[ii])-Y[ii]).^2
     end
     return err
 end
 
+function sqerrorSAGE2(betas::Vector{Float64}, X::Vector{Float64}, Y::Vector{Float64})
+    err = 0.0
+    pred_i = sage_ns(X,betas)
+    for (n,ii) in enumerate( Y)
+        
+        err += (ii -pred_i[n]).^2
+    end
+    return err
+end
