@@ -10,6 +10,7 @@
     Requirements:
     - Julia 1.5
     - utils.jl
+    - echo times
     - five echo times with corresponding images
     - one brain image
 
@@ -19,36 +20,10 @@
 
     User supplied data:
         - Command line usage
-        $ julia -t <threads #> SAGE_biexp_fit.jl <path to Python processed data>
-
+        $ julia ./SAGE_biexp_fit.jl --echos 8.8 26.0 49.0 66.0 88.0 --SAGE_nii_brainMask <>/brain_mask.nii.gz --TE_nii_names <>/TE1_img_w_Skull.nii.gz <>/TE2_img_w_Skull.nii.gz <>/TE3_img_w_Skull.nii.gz <>/TE4_img_w_Skull.nii.gz <>/TE5_img_w_Skull.nii.gz 
         - The echo times are still hard coded
 
-    To Run this within MATLAB:
-        % CHANGE PATHS AND NAMES ACCORDINGLY. NOT TESTED ON WINDOWS
-        % To set: Julia path, This scrip path, your files pathes.
-        base_path = "/Volumes/GraceHopper/HFTT/1420021/NS/";
-        te1 = sprintf("%s1420021_LEFT_e1_tshift_bet.nii.gz",base_path);
-        te2 = sprintf("%s1420021_LEFT_e2_tshift_bet.nii.gz",base_path);
-        te3 = sprintf("%s1420021_LEFT_e3_tshift_bet.nii.gz",base_path);
-        te4 = sprintf("%s1420021_LEFT_e4_tshift_bet.nii.gz",base_path);
-        te5 = sprintf("%s1420021_LEFT_e5_tshift_bet.nii.gz",base_path);
-        b_fname = sprintf("%s1420021_LEFT_e2_tshift_tmean_bet_mask.nii.gz",base_path);
-        R2s_fname = sprintf("%sSAGE_R2s_Brain_julia.nii.gz",path);
-        R2_fname = sprintf("%sSAGE_R2s_Brain_julia.nii.gz",path);
-        %% Function definition from here.
-        [r2simg,r2img] = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname);
-            function [r2simg,r2img] = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname)
-            julia_cmd = "/usr/local/bin/julia";
-            SAGE_Fit_julia = "/Users/StokesLab/Documents/EK/Code/The_MRI_toolbox/SAGE_biexp_fit.jl";
-            unix(sprintf("%s %s %s %s %s %s %s %s",julia_cmd,SAGE_Fit_julia,te1,te2,te3,te4,te5,b_fname))
-            r2s = sprintf("%s/SAGE_R2s_Brain_julia.nii.gz",base_path);
-            r2 = sprintf("%s/SAGE_R2_Brain_julia.nii.gz",base_path);
-            info = niftiinfo(r2s);
-            r2simg = niftiread(info);
-            info = niftiinfo(r2);
-            r2img = niftiread(info);
-        end
-
+    
     Output:
         - The output from this script are two nifti files for the fitting parameters R2star and R2.
 
@@ -82,6 +57,10 @@
     "0.3  June 24, 2021 [nsisco]\n"
     "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
     "   - Added some MATLAB coding implimentation \n"
+    "\n",
+    "1.0  July 16, 2021 [nsisco]\n"
+    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
+    "   - Major overhaul fo IO and optimization of fitting. \n"
 
 =#
 
@@ -128,14 +107,6 @@ function commandline()
             nargs=5
             arg_type = String
             required = true
-        # "--TE_nii_2"
-        #     required = true
-        # "--TE_nii_3"
-        #     required = true
-        # "--TE_nii_4"
-        #     required = true
-        # "--TE_nii_5"
-        #     required = true
         "--SAGE_nii_brainMask"
             required = true
         "--echos"
@@ -146,7 +117,6 @@ function commandline()
 
     println(parse_args(settings))
 
-    # parsed_args = TE_parse_commandline();
     for (out, val) in parse_args(settings)
         println(" $out => $val")
     end
@@ -219,26 +189,6 @@ function linearize(nx::Int64,ny::Int64,nz::Int64,ne::Int64,nt::Int64,data::Array
         end
     end
 
-
-    # STE1=zeros(nx,ny,nz);
-    # STE2=similar(STE1);
-    # STE5=similar(STE1);
-    # begin
-    #     for ii in 1:nx
-    #         for jj in 1:ny
-    #             for kk in 1:nz
-    #                 STE1[ii,jj,kk] = mean(data[ii,jj,kk,1,1:15]);
-    #                 STE2[ii,jj,kk] = mean(data[ii,jj,kk,2,1:15]);
-    #                 STE5[ii,jj,kk] = mean(data[ii,jj,kk,5,1:15]);
-    #             end
-    #         end
-    #     end
-    # end
-
-    # STE1_pre = repeat(STE1,1,1,1,150);
-    # STE2_pre = repeat(STE1,1,1,1,150);
-    # STE5_pre = repeat(STE1,1,1,1,150);
-
     ste1 = data[:,:,:,1,:];
     ste2 = data[:,:,:,2,:];
     ste5 = data[:,:,:,5,:];
@@ -277,11 +227,13 @@ function linearize(nx::Int64,ny::Int64,nz::Int64,ne::Int64,nt::Int64,data::Array
     vec_R2_log = reshape(R₂_log,tot_voxels,nt);
     vec_R2s_log = reshape(R₂star_log,tot_voxels,nt);
     tmpOUT=Array{Float64}(zeros(nx*ny*nz,4,nt));
-    # vec_R2fit = zeros(nx*ny*nz*nt,4);
-    # vec_R2sfit = zeros(nx*ny*nz*nt,4);
-    # vec_R2_log = reshape(R₂_log,nx*ny*nz*nt);
-    # vec_R2s_log = reshape(R₂star_log,nx*ny*nz*nt);
-    # tmpOUT=Array{Float64}(zeros(nx*ny*nz*nt,4));
+    #= Leave in case further optimization
+    vec_R2fit = zeros(nx*ny*nz*nt,4);
+    vec_R2sfit = zeros(nx*ny*nz*nt,4);
+    vec_R2_log = reshape(R₂_log,nx*ny*nz*nt);
+    vec_R2s_log = reshape(R₂star_log,nx*ny*nz*nt);
+    tmpOUT=Array{Float64}(zeros(nx*ny*nz*nt,4));
+    =#
 
     return vec_R2_log,vec_R2s_log,vec_R2sfit,vec_R2fit,tmpOUT,R₂star_log,R₂_log,newDATA
 end
@@ -302,13 +254,6 @@ function main(a)
 
 
     base = dirname(a["TE_nii_names"][1])
-    # paths = [
-    #     joinpath(base,basename(a["TE_nii_1"])),
-    #     joinpath(base,basename(a["TE_nii_2"])),
-    #     joinpath(base,basename(a["TE_nii_3"])),
-    #     joinpath(base,basename(a["TE_nii_4"])),
-    #     joinpath(base,basename(a["TE_nii_5"]))
-    #     ]
     paths = [
         joinpath(base,basename(a["TE_nii_names"][1])),
         joinpath(base,basename(a["TE_nii_names"][2])),
@@ -317,18 +262,12 @@ function main(a)
         joinpath(base,basename(a["TE_nii_names"][5]))
         ]
     b_fname = joinpath(base,basename(a["SAGE_nii_brainMask"]))
-
     DATA,MASK,nx,ny,nz,ne,nt=load_sage_data(paths,b_fname);
     tot_voxels = nx*ny*nz
     vec_mask = reshape(MASK[:,:,:,1,1],tot_voxels,1);
     vec_data = reshape(DATA,tot_voxels,ne,nt);
 
-    # MASK = Array{Bool}(niread(b_fname))
-    # MASK = MASK.raw
-    # vec_mask = reshape(MASK,tot_voxels,1)
-    
-
-#= Long comment
+#= Long comment for debugging
     te1=0.00782;
     te2=0.028769;
     te3=0.060674;
@@ -360,23 +299,19 @@ function main(a)
     vec_R2_log,vec_R2s_log,vec_R2sfit,vec_R2fit,tmpOUT,R₂star_log,R₂_log,newDATA = linearize(nx,ny,nz,ne,nt,DATA,MASK,echos)
 
     x0 = Vector{Float64}(zeros(4))
-#= Trie multithreading and got weird maps
-    # tot_voxels = nx*ny*nz*nt
-    # vec_data = reshape(newDATA,tot_voxels,ne)
-    # vec_mask = repeat(vec_mask,1,150);
-    # @time begin
-    #     Threads.@threads for vox in 1:tot_voxels
-    #         if vec_mask[vox]
-    #             initial = fguess(x0,vec_data[vox,:],vec_R2s_log[vox],vec_R2_log[vox])
-    #             tmpOUT[vox,:] = nlsfit(SAGE_biexp4p_d,echos,vec_data[vox,:],initial)
-    #         end
-    #     end
-    # end
+#= Tried multithreading and got weird maps
+    tot_voxels = nx*ny*nz*nt
+    vec_data = reshape(newDATA,tot_voxels,ne)
+    vec_mask = repeat(vec_mask,1,150);
+    @time begin
+        Threads.@threads for vox in 1:tot_voxels
+            if vec_mask[vox]
+                initial = fguess(x0,vec_data[vox,:],vec_R2s_log[vox],vec_R2_log[vox])
+                tmpOUT[vox,:] = nlsfit(SAGE_biexp4p_d,echos,vec_data[vox,:],initial)
+            end
+        end
+    end
 =#
-
-
-    # tmpOUT = Array{Float64}(zeros(tot_voxels,4,nt));
-
     begin
         @time @inbounds for dynamics in 1:nt
             tmpOUT[:,:,dynamics] = nlsworker_sage(tot_voxels,vec_data[:,:,dynamics],vec_mask,vec_R2s_log,vec_R2_log,x0,echos)
@@ -387,26 +322,8 @@ function main(a)
     vec_R2sfit = tmpOUT[:,2,:]
     vec_R2fit = tmpOUT[:,3,:]
 
-    # vec_R2sfit = tmpOUT[:,2]
-    # vec_R2fit = tmpOUT[:,3]
+    
 
-
-    #=
-    @time for JJ=1:nt;
-        temp = vec_data[:,:,JJ]
-        tempFit_data = fitdata[:,:,JJ]
-        @time fitdata[:,:,JJ] = work(IND,SAGE_biexp3p_d,echos,temp,X0,tempFit_data)
-        
-        println("Done with Fit $JJ of $nt")
-    end
-    =#
-    #-------------------------------------  
-    # Xv = Array{Float64}(fitdata);
-    # Xv = reshape(Xv,nx,ny,nz,4,nt);
-    # R2s = zeros(nx,ny,nz,nt);
-    # R2 = zeros(nx,ny,nz,nt);
-    # R2s = Xv[:,:,:,2,:];
-    # R2 = Xv[:,:,:,3,:];
     R2s = reshape(vec_R2sfit,nx,ny,nz,nt);
     R2 = reshape(vec_R2fit,nx,ny,nz,nt);
     R2s[findall(x->x.>1000,R2s)].=0;
@@ -448,10 +365,12 @@ function main(a)
     println("The R2s is saved at $R2s_fname")
     println("The R2 is saved at $R2_fname")
 
-    for ii in 1:ne
+    
+    for (n,ii) in enumerate(1:ne)
         temp = NIVolume(DATA[:,:,:,ii,:];voxel_size=(tmp1,tmp2,tmp3))
         fname = @sprintf("%s/Input_%s.nii.gz",base,ii)
         niwrite(fname, temp)
+        println("Saved original TE$n image to $fname")
     end
 
 
