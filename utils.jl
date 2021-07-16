@@ -334,6 +334,7 @@ end
 end
 
 function SAGE_biexp4p_d(te,x)
+    # I hate this but I think I'm stuck with it.
     tn=te;
     TE=te[end];
     SI_sage = zeros(size(tn));
@@ -361,12 +362,3 @@ function sqerrorSAGE(betas::Vector{Float64}, X::Vector{Float64}, Y::Vector{Float
     return err
 end
 
-function sqerrorSAGE2(betas::Vector{Float64}, X::Vector{Float64}, Y::Vector{Float64})
-    err = 0.0
-    pred_i = sage_ns(X,betas)
-    for (n,ii) in enumerate( Y)
-        
-        err += (ii -pred_i[n]).^2
-    end
-    return err
-end
