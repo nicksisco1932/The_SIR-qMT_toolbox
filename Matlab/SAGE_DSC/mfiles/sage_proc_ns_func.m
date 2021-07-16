@@ -46,9 +46,14 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE,OEF,CMRO2,pO2] = sage_
     %     brain_img = erodeBWperim(mask,5); % Just to be conservative
     %     imagesc(brain_img(:,:,10)); % check to see if the mask is ok, otherwise change scale
 
-    bfname = fullfile(temp,sprintf("bPT1319%03i_preb_mask.nii.gz",index));
-    brain_img = double(niftiread(bfname));
-    
+    try
+        bfname = fullfile(temp,sprintf("PT1319%03i_brain_mask.nii.gz",index));
+        brain_img = double(niftiread(bfname));
+    catch
+        bfname = fullfile(temp,sprintf("bPT1319%03i_preb_mask.nii.gz",index));
+        brain_img = double(niftiread(bfname));
+    end
+    %%
     
     
     denoise=0;
@@ -104,6 +109,11 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE,OEF,CMRO2,pO2] = sage_
     %% AIF and enhancing masks
     DSC.AIF = AutoAIF_Brain(filtered_image(:,:,:,1:2,:),[DSC.Parms.TR DSC.Parms.TE1 DSC.Parms.TE2],DSC.Parms.flip,0,1,double(brain_img),DSC.Parms.ss_tp,DSC.Parms.gd_tp,DSC.Parms.pk_tp);
 
+    
+    
+    
+    
+    
     %%
     if FLAG==1
         AIF=1;
@@ -121,7 +131,7 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE,OEF,CMRO2,pO2] = sage_
         [dR2star_all,dR2star_SE,~,~] = linearizing_data(DSC,filtered_image,brain_img);
     end
     
-    julia_fitting=1;
+    julia_fitting=0;
     if julia_fitting~=0
         out_path=sprintf("/Users/nicks/Documents/MRI_data/SAGE/nifti/PT%s/",num2str(index));
         if ~isfolder(out_path)
@@ -150,6 +160,22 @@ function [DSC,CBF_map,CBFSE_map,CBV_all,CBV_SE,MTT,MTT_SE,OEF,CMRO2,pO2] = sage_
         
         
         [R2star_all,R2star_SE] = sage_julia_fitty(out_path,te1,te2,te3,te4,te5,bfname,DSC);
+    end
+    
+    %% Nonlin Fit SAGE data
+    vec_data = reshape(DSC.Data,[nx*ny*nz ne nt]);
+    vec_mask = reshape(logical(brain_img),[nx*ny*nz 1]);
+    Xv = zeros(nx*ny*nz,4,nt);
+    echoes = [DSC.Parms.TE1 DSC.Parms.TE2 DSC.Parms.TE3 DSC.Parms.TE4 DSC.Parms.TE5];
+    X0=[500 50 25 0];
+    for dynamics = 1:nt
+        tic
+        for vox = 1:nx*ny*nz
+            if vec_mask(vox)
+                Xv(vox,:,dynamics) = fitSAGE(echoes,vec_data(vox,:,dynamics),X0,'n');
+            end
+        end
+        toc
     end
     
     %% CBV
