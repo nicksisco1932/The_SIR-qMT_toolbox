@@ -118,11 +118,6 @@ using Optim;
 
 include("./utils.jl")
 
-thr = Threads.nthreads()
-if thr==16
-    Threads.nthreads() = 8
-    return thr = 8
-end
 function commandline()
         
 
@@ -159,23 +154,6 @@ function commandline()
 end
 
 A = commandline()
-
-function optim_fitty(f::Function, xdata::Vector{Float64},data::Vector{Float64},x0::Vector{Float64})
-    # fitdata = Optim.minimizer( optimize(b -> sqerrorSAGE(b, xdata,  data), x0))
-    fitdata = curve_fit(f,xdata,data,x0) # this is faster and has good results
-    return fitdata
-end
-
-function work(IND::Vector{Int64},f::Function,echos::Vector{Float64},vec_data::Array{Float64},X0::Vector{Float64},fitdata::Array{Float64})
-    # Threads.@threads for ii in IND # surprisingly, threads is not faster
-    for ii in IND
-        temp = vec_data[ii,:];
-        fitY = optim_fitty(f, echos, temp, X0);fitdata[ii,:] = fitY.param
-        # fitY = optim_fitty(echos, temp, X0);fitdata[ii,:] = fitY
-    end
-    
-    return fitdata
-end
 
 function fguess(guess::Vector{Float64},y::Vector{Float64},vec_r2s_log::Float64,vec_r2_log::Float64)
     guess[1] = maximum(y)
@@ -227,19 +205,19 @@ function linearize(nx::Int64,ny::Int64,nz::Int64,ne::Int64,nt::Int64,data::Array
     te5=echos[5];
     tot_voxels=nx*ny*nz
         
-    # newDATA=zeros(ne,nx,ny,nz,nt);
+    newDATA=zeros(nx,ny,nz,nt,ne);
 
-    # for ii in 1:nx
-    #     for jj in 1:ny
-    #         for kk in 1:nz
-    #             for tt in 1:nt
-    #                 if mask[ii,jj,kk]
-    #                     newDATA[:,ii,jj,kk,tt] = data[ii,jj,kk,:,tt]
-    #                 end
-    #             end
-    #         end
-    #     end
-    # end
+    for ii in 1:nx
+        for jj in 1:ny
+            for kk in 1:nz
+                for tt in 1:nt
+                    if mask[ii,jj,kk]
+                        newDATA[ii,jj,kk,tt,:] = data[ii,jj,kk,:,tt]
+                    end
+                end
+            end
+        end
+    end
 
 
     # STE1=zeros(nx,ny,nz);
@@ -294,17 +272,18 @@ function linearize(nx::Int64,ny::Int64,nz::Int64,ne::Int64,nt::Int64,data::Array
     end
 
 
-    vec_R2fit = zeros(tot_voxels,nt);
-    vec_R2sfit = zeros(tot_voxels,nt);
-    vec_R2_log = reshape(R₂_log,tot_voxels,nt);
-    vec_R2s_log = reshape(R₂star_log,tot_voxels,nt);
-    # vec_R2fit = zeros(nx*ny*nz*nt,4);
-    # vec_R2sfit = zeros(nx*ny*nz*nt,4);
-    # vec_R2_log = reshape(R₂_log,nx*ny*nz*nt);
-    # vec_R2s_log = reshape(R₂star_log,nx*ny*nz*nt);
+    # vec_R2fit = zeros(tot_voxels,nt);
+    # vec_R2sfit = zeros(tot_voxels,nt);
+    # vec_R2_log = reshape(R₂_log,tot_voxels,nt);
+    # vec_R2s_log = reshape(R₂star_log,tot_voxels,nt);
     tmpOUT=Array{Float64}(zeros(nx*ny*nz,4,nt));
+    vec_R2fit = zeros(nx*ny*nz*nt,4);
+    vec_R2sfit = zeros(nx*ny*nz*nt,4);
+    vec_R2_log = reshape(R₂_log,nx*ny*nz*nt);
+    vec_R2s_log = reshape(R₂star_log,nx*ny*nz*nt);
+    tmpOUT=Array{Float64}(zeros(nx*ny*nz*nt,4));
 
-    return vec_R2_log,vec_R2s_log,vec_R2sfit,vec_R2fit,tmpOUT,R₂star_log,R₂_log
+    return vec_R2_log,vec_R2s_log,vec_R2sfit,vec_R2fit,tmpOUT,R₂star_log,R₂_log,newDATA
 end
 
 function main(a)
@@ -367,29 +346,48 @@ function main(a)
     X0=[1000,100.0,50,100]
     IND=findall(x->x.>0,vec_mask[:,1]);
 
-    vec_R2_log,vec_R2s_log,vec_R2sfit,vec_R2fit,tmpOUT,R₂star_log,R₂_log = linearize(nx,ny,nz,ne,nt,DATA,MASK,echos)
+    vec_R2_log,vec_R2s_log,vec_R2sfit,vec_R2fit,tmpOUT,R₂star_log,R₂_log,newDATA = linearize(nx,ny,nz,ne,nt,DATA,MASK,echos)
 
     x0 = Vector{Float64}(zeros(4))
 
-    tmpOUT = Array{Float64}(zeros(tot_voxels,4,nt));
-
-    begin
-        @time for dynamics in 1:nt
-            @time for vox in 1:tot_voxels
-                if vec_mask[vox]
-                    initial = fguess(x0,vec_data[vox,:,dynamics],vec_R2s_log[vox,dynamics],vec_R2_log[vox,dynamics])
-                    # tmpOUT[vox,:,dynamics] = nlsfit(sage_ns,echos,vec_data[vox,:,dynamics],initial)
-                    tmpOUT[vox,:,dynamics] = nlsfit(SAGE_biexp4p_d,echos,vec_data[vox,:,dynamics],initial)
-                    # tmpOUT[vox,:,dynamics] = nlsfit(sage_ns,echos,vec_data[vox,:,dynamics],[100.0;50;25;0])
-                    # tmpOUT[vox,:,dynamics] = Optim.minimizer(optimize(b -> sqerrorSAGE2(b, echos,  vec_data[vox,:,dynamics]), initial; autodiff = :forward))
-                end
+    tot_voxels = nx*ny*nz*nt
+    vec_data = reshape(newDATA,tot_voxels,ne)
+    vec_mask = repeat(vec_mask,1,150);
+    @time begin
+        for vox in 1:tot_voxels
+            if vec_mask[vox]
+                initial = fguess(x0,vec_data[vox,:],vec_R2s_log[vox],vec_R2_log[vox])
+                tmpOUT[vox,:] = nlsfit(SAGE_biexp4p_d,echos,vec_data[vox,:],initial)
             end
-            println("Done with Fit $dynamics of $nt")
-        end    
+        end
     end
     
-    vec_R2sfit = tmpOUT[:,2,:]
-    vec_R2fit = tmpOUT[:,3,:]
+
+
+    # tmpOUT = Array{Float64}(zeros(tot_voxels,4,nt));
+
+    # begin
+    #     @time for dynamics in 1:nt
+    #         @time for vox in 1:tot_voxels
+    #             if vec_mask[vox]
+    #                 initial = fguess(x0,vec_data[vox,:,dynamics],vec_R2s_log[vox,dynamics],vec_R2_log[vox,dynamics])
+    #                 # tmpOUT[vox,:,dynamics] = nlsfit(sage_ns,echos,vec_data[vox,:,dynamics],initial)
+    #                 tmpOUT[vox,:,dynamics] = nlsfit(SAGE_biexp4p_d,echos,vec_data[vox,:,dynamics],initial)
+    #                 # tmpOUT[vox,:,dynamics] = nlsfit(sage_ns,echos,vec_data[vox,:,dynamics],[100.0;50;25;0])
+    #                 # tmpOUT[vox,:,dynamics] = Optim.minimizer(optimize(b -> sqerrorSAGE2(b, echos,  vec_data[vox,:,dynamics]), initial; autodiff = :forward))
+    #             end
+    #         end
+    #         println("Done with Fit $dynamics of $nt")
+    #     end    
+    # end
+    
+    # vec_R2sfit = tmpOUT[:,2,:]
+    # vec_R2fit = tmpOUT[:,3,:]
+
+    vec_R2sfit = tmpOUT[:,2]
+    vec_R2fit = tmpOUT[:,3]
+
+
     #=
     @time for JJ=1:nt;
         temp = vec_data[:,:,JJ]
