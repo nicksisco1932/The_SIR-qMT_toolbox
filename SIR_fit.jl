@@ -256,7 +256,7 @@ function main(a)
     println("The PSR is saved at $PSR_fname")
     println("The R1f is saved at $R1f_fname")
     println("The Sf is saved at $SF_fname")
-    println("The original data is saved at $fname_1")
+    println("The original data was copied to $fname_1 in the same image space as $PSR_fname")
 end
 
 A = commandline()
