@@ -19,13 +19,13 @@ The dimensions of your SIR_Data file must be [nx,ny,nz,nd] where nd is the dynam
 
   Set your file path first
 ```Bash
-  path = <PATH TO FILES>
+path = <PATH TO FILES>
 ```
   Then copy and paste this.
 ```Bash
-  brain_mask = $path/brain_mask.nii.gz
-  SIR_4D_DATA = $path/SIR_DATA.nii.gz
-  julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data $SIR_4D_DATA --SIR_brainMask $brain_mask --kmf 14.5 --Sm 0.83
+brain_mask = $path/brain_mask.nii.gz
+SIR_4D_DATA = $path/SIR_DATA.nii.gz
+julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data $SIR_4D_DATA --SIR_brainMask $brain_mask --kmf 14.5 --Sm 0.83
 ```
 
 
