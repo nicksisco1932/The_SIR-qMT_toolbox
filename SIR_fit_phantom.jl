@@ -65,6 +65,20 @@ include("./utils.jl")
 base="/mnt/c/Users/nicks/Documents/MRI_data/Phantoms/20210713_Phantom_Agarose/DICOM/SIR/"
 paths = [@sprintf("%sDICOM_WIP_2D_SIR_TSE_Log_16_TI_2500_TD_20210713135226_901.nii.gz",base)]
 
+# base="/mnt/c/Users/nicks/Documents/MRI_data/Phantoms/20210720_Phantom_agar/DICOM/SIR_qMT/"
+# paths = [@sprintf("%sDICOM_WIP_2D_SIR_TSE_Log_16_TI_2500_TD_20210720153139_601.nii.gz",base)]
+
+mask = [@sprintf("%sMASK.nii.gz",base)]
+MASK=niread(mask[1]);
+MASK=Array{Float64}(dropdims(MASK;dims=3))
+
+IND=findall(x->x.>1,MASK);
+
+for ii in IND
+    MASK[ii]=1
+end
+
+
 # base = dirname(a["SIR_nii_1"])
 # paths = [joinpath(base,basename(a["SIR_nii_1"])),
 #     joinpath(base,basename(a["SIR_nii_2"])),
@@ -91,6 +105,14 @@ function load_data_phantom(paths)
 end
 
 DATA,nx,ny,nz,nt=load_data_phantom(paths);
+newDATA=zeros(nt,nx,ny)
+
+for ii in 1:nx
+    for jj in 1:ny
+        newDATA[:,ii,jj]=DATA[ii,jj,:]
+    end
+end
+
 
 function reshape_and_normalize_phantom(data_4d::Array{Float64},TI::Array{Float64},TD::Array{Float64},NX::Int64,NY::Int64,NZ::Int64,NT)
     # [pmf R1f Sf M0f]
@@ -112,7 +134,7 @@ function reshape_and_normalize_phantom(data_4d::Array{Float64},TI::Array{Float64
     return tot_voxels,X,Yy
 end
 
-tot_voxels,times,Yy = reshape_and_normalize_phantom( DATA,ti_times,td_times,nx,ny,nz,nt);
+tot_voxels,times,Yy = reshape_and_normalize_phantom( newDATA,ti_times,td_times,nx,ny,nz,nt);
 
 thr = Threads.nthreads()
 println("Fitting with $thr threads")
@@ -133,7 +155,8 @@ model(x,p) = SIR_Mz0(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)
 function f()
     begin
         Threads.@threads for ii in 1:tot_voxels
-            tmpOUT[:,ii] = nlsfit_1(model,times,Yy[:,ii],X0)
+            tmpOUT[:,ii] = nlsfit(model,times,Yy[:,ii],X0)
+            # Optim.minimizer(optimize(b -> sqerrorSAGE(b, echos,  realY), X0))
         end 
     end
 end
@@ -141,30 +164,49 @@ end
 @time f()
 
 
+# if nz == 1
+#     Xv = tmpOUT;
+#     Xv = reshape(Xv,nx,ny,4);
+#     PSR = zeros(nx,ny);
+#     R1f = zeros(nx,ny);
+#     Sf = zeros(nx,ny);
+#     PSR = Xv[:,:,1]*100;
+#     R1f = Xv[:,:,2];
+#     Sf = Xv[:,:,3];
+# else
+#     Xv = tmpOUT;
+#     Xv = reshape(Xv,nx,ny,nz,4);
+#     PSR = zeros(nx,ny,nz);
+#     R1f = zeros(nx,ny,nz);
+#     Sf = zeros(nx,ny,nz);
+#     PSR = Xv[:,:,:,1]*100;
+#     R1f = Xv[:,:,:,2];
+#     Sf = Xv[:,:,:,3];
+# end
+
 if nz == 1
     Xv = tmpOUT;
-    Xv = reshape(Xv,nx,ny,4);
+    Xv = reshape(Xv,4,nx,ny);
     PSR = zeros(nx,ny);
     R1f = zeros(nx,ny);
     Sf = zeros(nx,ny);
-    PSR = Xv[:,:,1]*100;
-    R1f = Xv[:,:,2];
-    Sf = Xv[:,:,3];
+    PSR = Xv[1,:,:]*100;
+    R1f = Xv[2,:,:];
+    Sf = Xv[3,:,:];
 else
     Xv = tmpOUT;
-    Xv = reshape(Xv,nx,ny,nz,4);
+    Xv = reshape(Xv,4,nx,ny,nz);
     PSR = zeros(nx,ny,nz);
     R1f = zeros(nx,ny,nz);
     Sf = zeros(nx,ny,nz);
-    PSR = Xv[:,:,:,1]*100;
-    R1f = Xv[:,:,:,2];
-    Sf = Xv[:,:,:,3];
+    PSR = Xv[1,:,:,:]*100;
+    R1f = Xv[2,:,:,:];
+    Sf = Xv[3,:,:,:];
 end
 
-
-PSR[findall(x->x.>100,PSR)].=0;
+PSR[findall(x->x.>1000,PSR)].=0;
 PSR[findall(x->x.<0,PSR)].=0;
-R1f[findall(x->x.>50,R1f)].=0;
+R1f[findall(x->x.>500,R1f)].=0;
 R1f[findall(x->x.<0,R1f)].=0;
 
 Sf[findall(x->x.>10,Sf)].=0;
@@ -184,14 +226,13 @@ SF_fname = @sprintf("%s/SIR_Brain_Sf_julia.nii.gz",base)
 # fname_2 = @sprintf("%s/SIR_T1_2.nii.gz",base)
 # fname_3 = @sprintf("%s/SIR_T1_3.nii.gz",base)
 # fname_4 = @sprintf("%s/SIR_T1_4.nii.gz",base)
-niwrite(PSR_fname,NIVolume(PSR;voxel_size=(tmp1,tmp2,tmp3)))
-niwrite(R1f_fname,NIVolume(R1f;voxel_size=(tmp1,tmp2,tmp3)))
-niwrite(SF_fname,NIVolume(Sf;voxel_size=(tmp1,tmp2,tmp3)))
+# niwrite(PSR_fname,NIVolume(PSR;voxel_size=(tmp1,tmp2,tmp3)))
+# niwrite(R1f_fname,NIVolume(R1f;voxel_size=(tmp1,tmp2,tmp3)))
+# niwrite(SF_fname,NIVolume(Sf;voxel_size=(tmp1,tmp2,tmp3)))
 
-niwrite(fname_1,NIVolume(DATA[:,:,:,1];voxel_size=(tmp1,tmp2,tmp3)))
-niwrite(fname_2,NIVolume(DATA[:,:,:,2];voxel_size=(tmp1,tmp2,tmp3)))
-niwrite(fname_3,NIVolume(DATA[:,:,:,3];voxel_size=(tmp1,tmp2,tmp3)))
-niwrite(fname_4,NIVolume(DATA[:,:,:,4];voxel_size=(tmp1,tmp2,tmp3)))
+niwrite(PSR_fname,NIVolume(PSR.*MASK;voxel_size=(tmp1,tmp2,tmp3)))
+niwrite(R1f_fname,NIVolume(R1f.*MASK;voxel_size=(tmp1,tmp2,tmp3)))
+niwrite(SF_fname,NIVolume(Sf.*MASK;voxel_size=(tmp1,tmp2,tmp3)))
 
 println("The PSR is saved at $PSR_fname")
 println("The R1f is saved at $R1f_fname")

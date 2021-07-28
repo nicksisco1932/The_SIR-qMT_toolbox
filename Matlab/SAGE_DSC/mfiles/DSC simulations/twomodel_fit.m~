@@ -1,0 +1,21 @@
+function S = twomodel_fit(tspan,B,~,AIFfull)
+
+x0 = [90 0.02 4.68 40]
+
+[T,Sv]=ode45('twomodel',tspan,x0,[],AIFfull,tspan,Ftm,PStm,vetm,vptm);
+
+    function dCs = twomodel(t,Cs,~,AIFfull,tspan)
+
+    AIF = interp1(tspan, AIFfull, t);
+
+    dCs = zeros(size(Cs));
+    dCs(1) = (x(1)/x(3))*(AIF-Cs(1))-(x(2)/x(3))*(Cs(1)-Cs(2));  %Cp
+    dCs(2) = (x(2)/x(4))*(Cs(1)-Cs(2));  %Ce
+    end
+
+S = Sv(:,1);
+
+end
+
+
+
