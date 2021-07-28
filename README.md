@@ -1,4 +1,4 @@
-# The MRI toolbox
+# The SIR-qMT toolbox
 
 <p align="center">
   <img src="https://github.com/nicksisco1932/The_MRI_toolbox/blob/master/Images/MR_logo_big.png" alt="drawing" width="400"/>
