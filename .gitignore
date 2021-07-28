@@ -11,3 +11,5 @@ R2_diff.nii.gz
 *.asv
 Test/20210728_PSR_Matlab.nii
 Test/Whole_brain.mlx
+MC_fit_PSR.nii.gz
+MC_fit_R1f.nii.gz
