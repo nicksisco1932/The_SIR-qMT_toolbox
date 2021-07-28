@@ -17,6 +17,14 @@ Make sure you change the <PATH> to the absolute path of your SIR data and brain 
 julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10  --kmf 14.5 --Sm 0.83 --SIR_Data <PATH>/SIR_DATA.nii.gz --SIR_brainMask <PATH>/brain_mask.nii.gz
 ```
 
+  or 
+```Bash
+path=<FULL PATH TO FILES>           # Full path of image directory
+brain_mask=$path/brain_mask.nii.gz  # Mask name
+SIR_4D_DATA=$path/SIR_DATA.nii.gz   # 4D dataset
+julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data $SIR_4D_DATA --SIR_brainMask $brain_mask --kmf 14.5 --Sm 0.83 
+```
+  
 **Python**
 ```Python
 # A function wrapper to call Julia to fit spin- and gradient-echo signal to a piecewise function using Julia
