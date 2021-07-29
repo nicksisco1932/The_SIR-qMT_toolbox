@@ -43,6 +43,16 @@ Representative SIR-qMT on a healthy volunteer. A represents the first data point
 ```bash
 julia ./SAGE_biexp_fit.jl --TE_nii_names <PATH>/PT1319001_TE1_img_w_Skull.nii.gz <PATH>/PT1319001_TE2_img_w_Skull.nii.gz <PATH>/PT1319001_TE3_img_w_Skull.nii.gz <PATH>/PT1319001_TE4_img_w_Skull.nii.gz <PATH>/PT1319001_TE5_img_w_Skull.nii.gz --SAGE_nii_brainMask <PATH>/bPT1319001_preb_mask.nii.gz --echos 7.82 28.8 60.7 81.6 102.6  
 ```
+
+**Shell Script**
+```tcsh
+#!/bin/tcsh
+path=<FULL PATH TO FILES>           # Full path of image directory
+brain_mask=$path/brain_mask.nii.gz  # Mask name
+SIR_4D_DATA=$path/SIR_DATA.nii.gz   # 4D dataset
+julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data $SIR_4D_DATA --SIR_brainMask $brain_mask --kmf 12.5 --Sm 0.83 
+
+```
   
 **Python**
 ```Python
