@@ -46,53 +46,40 @@ julia ./SAGE_biexp_fit.jl --TE_nii_names <PATH>/PT1319001_TE1_img_w_Skull.nii.gz
   
 **Python**
 ```Python
-# A function wrapper to call Julia to fit spin- and gradient-echo signal to a piecewise function using Julia
-import nibabel as nib
-import os
+#!/usr/local/bin/Python3.8              # or this can be your virtual environment
+import os                               # A core library, no virtual environment needed
+def pj(in1, in2):
+    return os.path.join(in1, in2)
 
-def loader(path):
-  headerinfo = nib.load(path)
-  vol = headerinfo.get_fdata()
-  return vol
-end
+def julia_call(ti,td,kmf,sm,data,mask): # A function to call julia
+    cmd = 'julia ./SIR_fit.jl --TI {} --TD {} --kmf {} --Sm {} --SIR_Data {} --SIR_brainMask {}'.format(ti, td, kmf, sm, data, mask)
+    print(cmd)
+    os.system(cmd)
+path=<FULL PATH TO FILES>               # Full path of image directory
+brain_mask=pj(path, brain_mask.nii.gz)  # Mask name
+SIR_4D_DATA=pj(path, SIR_DATA.nii.gz)   # 4D dataset
 
-def sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname):
-  julia_cmd = "<PATH TO JULIA>/julia";
-  SAGE_Fit_julia = "<PATH TO MRI TOOLBOX>/The_MRI_toolbox/SAGE_biexp_fit.jl"
-  cmd = ‘{} {} {} {} {} {} {} {}’.format(julia_cmd,SAGE_Fit_julia,te1,te2,te3,te4,te5,b_fname)  
-  os.system(cmd)
-  r2s = os.path.join(‘{}/SAGE_R2s_Brain_julia.nii.gz’.format(base_path))
-  r2 = os.path.join (‘{}/SAGE_R2_Brain_julia.nii.gz’.format(base_path))  
-  r2simg = loader(r2s)
-  r2img = loader(r2)
-  return r2simg,r2img
-
-r2simg,r2img = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname) # this should return two arrays
-
+ti_values = [15 15 278 1007]
+ti_values = [684 4121 2730 10]
+kmf = 12.5
+sm = 0.83 
+julia_call(ti_values, td_values, kmf, sm, SIR_4D_DATA, brain_mask)
 ```
 
 **MATLAB**
 
 ```MATLAB
-% A function wrapper to call Julia to fit spin- and gradient-echo signal to a piecewise function using Julia
-[r2simg,r2img] = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname);
+path=<FULL PATH TO FILES>                     % Full path of image directory
+brain_mask=fullfile(path, brain_mask.nii.gz)  % Mask name
+SIR_4D_DATA= fullfile(path, SIR_DATA.nii.gz)  % 4D dataset
 
-function [vol, headerinfo] = loader(path)
-  % requires MATLAB: image processing toolbox
-  headerinfo = niftiinfo(path);
-  vol = niftiread(info);
-end
-
-function [r2simg,r2img] = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname)
-  julia_cmd = "<PATH TO JULIA>/julia";
-  SAGE_Fit_julia = "<PATH TO MRI TOOLBOX>/The_MRI_toolbox/SAGE_biexp_fit.jl";
-  unix(sprintf("%s %s %s %s %s %s %s %s",julia_cmd,SAGE_Fit_julia,te1,te2,te3,te4,te5,b_fname))  
-  r2s = sprintf("%s/SAGE_R2s_Brain_julia.nii.gz",base_path);
-  r2 = sprintf("%s/SAGE_R2_Brain_julia.nii.gz",base_path);  
-  r2simg = loader(r2s);  
-  r2img = loader(r2);
-end
-
+ti_values = [15,15,278,1007];
+ti_values = [684,4121,2730,10];
+kmf = 12.5;
+sm = 0.83;
+cmd = sprintf(“julia ./SIR_fit.jl --TI %s --TD %s --kmf %s --Sm %s --SIR_Data %s --SIR_brainMask %s”, ti_values, td_values, kmf, sm, SIR_4D_DATA, brain_mask)
+disp(cmd)
+system(cmd)                                   % alternatively, use unix(cmd)
 ```
 
 
