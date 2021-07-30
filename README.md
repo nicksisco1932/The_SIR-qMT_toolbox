@@ -6,7 +6,8 @@
 
 Welcome to the magnetic resonance toolbox. The main pipeline shown here are for processing quantitative magnetization transfer imaging using selective inversion recovery (SIR-qMT). All the fitting is implemented using Julia, which is computationally fast but still readable.
 
-Updates to this will include a tutorial on how to use the code and more detailed documentation. 
+The first thing you will have to do is download and install Julia! 
+https://julialang.org/downloads/
 
 # Jupyter Notebook with Julia kernel
 If you have not cloned this repository, you can download the zip in the top right of this page or if you are familiar with git, use this. 
