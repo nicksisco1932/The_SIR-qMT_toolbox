@@ -28,6 +28,11 @@ After that:
 ```
 Then open SIR_qMT_test.ipynb from your local device. 
 
+**Compare your results to our results**
+<p align="center">
+  <img src="https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/Images/Figure%201.png" alt="drawing" width="600"/>
+</p>
+
 # Command Line
 
 Make sure you change the <PATH> to the absolute path of your SIR data and brain mask.
@@ -108,5 +113,3 @@ function julia_call(ti,td,kmf,sm,data,mask)
 end
   
 ```
-
-
