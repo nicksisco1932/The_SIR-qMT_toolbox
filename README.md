@@ -8,8 +8,27 @@ Welcome to the magnetic resonance toolbox. The main pipeline shown here are for 
 
 Updates to this will include a tutorial on how to use the code and more detailed documentation. 
 
+# Jupyter Notebook with Julia kernel
+If you have not cloned this repository, you can download the zip in the top right of this page or if you are familiar with git, use this. 
 
-**Command Line**
+```bash
+git clone https://github.com/nicksisco1932/The_SIR-qMT_toolbox
+```
+
+After that:
+  Do these steps
+   1) Download and install Julia 1.6
+   2) Then open the Julia app.
+   3) Using the Julia REPL command line
+```Julia
+      using Pkg 
+      Pkg.add("IJulia") 
+      Pkg.precompile() 
+      notebook()
+```
+Then open SIR_qMT_test.ipynb from your local device. 
+
+# Command Line
 
 Make sure you change the <PATH> to the absolute path of your SIR data and brain mask.
   
@@ -34,13 +53,7 @@ julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data $SIR_4D_
 Representative SIR-qMT on a healthy volunteer. A represents the first data point corresponding to t<sub>I</sub>,t<sub>D</sub> = 278,2730 ms. B, C, and D are maps from the fit parameters pool size ratio, R<sub>1f</sub>, and S<sub>f</sub> (B<sub>1</sub> inhomogeneity), respectively. These images are consistent with published parameters, white matter have the highest relative PSR and R<sub>1f</sub>, while S<sub>f</sub> remains relatively flat at 3T with slight increases near the posterior of this map.
   
   
-# Using Matlab or Python to call Julia examples.
-  
-
-# SAGE Fitting call
-```bash
-julia ./SAGE_biexp_fit.jl --TE_nii_names <PATH>/PT1319001_TE1_img_w_Skull.nii.gz <PATH>/PT1319001_TE2_img_w_Skull.nii.gz <PATH>/PT1319001_TE3_img_w_Skull.nii.gz <PATH>/PT1319001_TE4_img_w_Skull.nii.gz <PATH>/PT1319001_TE5_img_w_Skull.nii.gz --SAGE_nii_brainMask <PATH>/bPT1319001_preb_mask.nii.gz --echos 7.82 28.8 60.7 81.6 102.6  
-```
+# Using Matlab or Python to call Julia examples. 
 
 **Shell Script**
 ```tcsh
