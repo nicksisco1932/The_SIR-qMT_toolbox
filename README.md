@@ -65,6 +65,7 @@ def julia_call(ti,td,kmf,sm,data,mask): # A function to call julia
     cmd = 'julia ./SIR_fit.jl --TI {} --TD {} --kmf {} --Sm {} --SIR_Data {} --SIR_brainMask {}'.format(ti, td, kmf, sm, data, mask)
     print(cmd)
     os.system(cmd)
+  
 path=<FULL PATH TO FILES>               # Full path of image directory
 brain_mask=pj(path, brain_mask.nii.gz)  # Mask name
 SIR_4D_DATA=pj(path, SIR_DATA.nii.gz)   # 4D dataset
