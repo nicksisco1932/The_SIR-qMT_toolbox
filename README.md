@@ -4,14 +4,31 @@
   <img src="https://github.com/nicksisco1932/The_MRI_toolbox/blob/master/Images/MR_logo_big.png" alt="drawing" width="400"/>
 </p>
 
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://nicksisco1932.github.io/The_MRI_toolbox/docs)
-
-Welcome to the magnetic resonance toolbox. This is intended to become a repository for magnetic resonance imaging processing pipelines that do not already have dedicated and extensive software written. The main pipelines shown here are for processing quantitative magnetization transfer imaging using selective inversion recovery (SIR-qMT), spin- and gradient-echo non-linear fitting (SAGE), and multi-flip angle (MFA) T1 maps. All the fitting is implemented using Julia, which is computationally fast but still readable.
+Welcome to the magnetic resonance toolbox. The main pipeline shown here are for processing quantitative magnetization transfer imaging using selective inversion recovery (SIR-qMT). All the fitting is implemented using Julia, which is computationally fast but still readable.
 
 Updates to this will include a tutorial on how to use the code and more detailed documentation. 
 
+# Jupyter Notebook with Julia kernel
+If you have not cloned this repository, you can download the zip in the top right of this page or if you are familiar with git, use this. 
 
-**Command Line**
+```bash
+git clone https://github.com/nicksisco1932/The_SIR-qMT_toolbox
+```
+
+After that:
+  Do these steps
+   1) Download and install Julia 1.6
+   2) Then open the Julia app.
+   3) Using the Julia REPL command line
+```Julia
+      using Pkg 
+      Pkg.add("IJulia") 
+      Pkg.precompile() 
+      notebook()
+```
+Then open SIR_qMT_test.ipynb from your local device. 
+
+# Command Line
 
 Make sure you change the <PATH> to the absolute path of your SIR data and brain mask.
   
@@ -36,63 +53,60 @@ julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data $SIR_4D_
 Representative SIR-qMT on a healthy volunteer. A represents the first data point corresponding to t<sub>I</sub>,t<sub>D</sub> = 278,2730 ms. B, C, and D are maps from the fit parameters pool size ratio, R<sub>1f</sub>, and S<sub>f</sub> (B<sub>1</sub> inhomogeneity), respectively. These images are consistent with published parameters, white matter have the highest relative PSR and R<sub>1f</sub>, while S<sub>f</sub> remains relatively flat at 3T with slight increases near the posterior of this map.
   
   
-# Using Matlab or Python to call Julia examples.
-  
+# Using Matlab or Python to call Julia examples. 
 
-# SAGE Fitting call
-```bash
-julia ./SAGE_biexp_fit.jl --TE_nii_names <PATH>/PT1319001_TE1_img_w_Skull.nii.gz <PATH>/PT1319001_TE2_img_w_Skull.nii.gz <PATH>/PT1319001_TE3_img_w_Skull.nii.gz <PATH>/PT1319001_TE4_img_w_Skull.nii.gz <PATH>/PT1319001_TE5_img_w_Skull.nii.gz --SAGE_nii_brainMask <PATH>/bPT1319001_preb_mask.nii.gz --echos 7.82 28.8 60.7 81.6 102.6  
+**Shell Script**
+```tcsh
+#!/bin/tcsh
+path=<FULL PATH TO FILES>           # Full path of image directory
+brain_mask=$path/brain_mask.nii.gz  # Mask name
+SIR_4D_DATA=$path/SIR_DATA.nii.gz   # 4D dataset
+julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data $SIR_4D_DATA --SIR_brainMask $brain_mask --kmf 12.5 --Sm 0.83 
+
 ```
   
 **Python**
 ```Python
-# A function wrapper to call Julia to fit spin- and gradient-echo signal to a piecewise function using Julia
-import nibabel as nib
-import os
+#!/usr/local/bin/Python3.8              # or this can be your virtual environment
+import os                               # A core library, no virtual environment needed
+def pj(in1, in2):
+    return os.path.join(in1, in2)
 
-def loader(path):
-  headerinfo = nib.load(path)
-  vol = headerinfo.get_fdata()
-  return vol
-end
+def julia_call(ti,td,kmf,sm,data,mask): # A function to call julia
+    cmd = 'julia ./SIR_fit.jl --TI {} --TD {} --kmf {} --Sm {} --SIR_Data {} --SIR_brainMask {}'.format(ti, td, kmf, sm, data, mask)
+    print(cmd)
+    os.system(cmd)
+  
+path=<FULL PATH TO FILES>               # Full path of image directory
+brain_mask=pj(path, brain_mask.nii.gz)  # Mask name
+SIR_4D_DATA=pj(path, SIR_DATA.nii.gz)   # 4D dataset
 
-def sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname):
-  julia_cmd = "<PATH TO JULIA>/julia";
-  SAGE_Fit_julia = "<PATH TO MRI TOOLBOX>/The_MRI_toolbox/SAGE_biexp_fit.jl"
-  cmd = ‘{} {} {} {} {} {} {} {}’.format(julia_cmd,SAGE_Fit_julia,te1,te2,te3,te4,te5,b_fname)  
-  os.system(cmd)
-  r2s = os.path.join(‘{}/SAGE_R2s_Brain_julia.nii.gz’.format(base_path))
-  r2 = os.path.join (‘{}/SAGE_R2_Brain_julia.nii.gz’.format(base_path))  
-  r2simg = loader(r2s)
-  r2img = loader(r2)
-  return r2simg,r2img
-
-r2simg,r2img = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname) # this should return two arrays
-
+ti_values = [15 15 278 1007]
+ti_values = [684 4121 2730 10]
+kmf = 12.5
+sm = 0.83 
+julia_call(ti_values, td_values, kmf, sm, SIR_4D_DATA, brain_mask)
 ```
 
 **MATLAB**
 
 ```MATLAB
-% A function wrapper to call Julia to fit spin- and gradient-echo signal to a piecewise function using Julia
-[r2simg,r2img] = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname);
+path=<FULL PATH TO FILES>                     % Full path of image directory
+brain_mask=fullfile(path, brain_mask.nii.gz)  % Mask name
+SIR_4D_DATA= fullfile(path, SIR_DATA.nii.gz)  % 4D dataset
 
-function [vol, headerinfo] = loader(path)
-  % requires MATLAB: image processing toolbox
-  headerinfo = niftiinfo(path);
-  vol = niftiread(info);
+ti_values = [15,15,278,1007];
+ti_values = [684,4121,2730,10];
+kmf = 12.5;
+sm = 0.83;
+julia_call(ti_values, td_values, kmf, sm, SIR_4D_DATA, brain_mask)
+  
+function julia_call(ti,td,kmf,sm,data,mask)
+  cmd = sprintf(“julia ./SIR_fit.jl --TI %s --TD %s --kmf %s --Sm %s --SIR_Data %s --SIR_brainMask %s”, ti, td, kmf, sm, data, mask)
+  disp(cmd)
+  system(cmd)                                   % alternatively, use unix(cmd)
 end
-
-function [r2simg,r2img] = sage_julia_fitty(base_path,te1,te2,te3,te4,te5,b_fname)
-  julia_cmd = "<PATH TO JULIA>/julia";
-  SAGE_Fit_julia = "<PATH TO MRI TOOLBOX>/The_MRI_toolbox/SAGE_biexp_fit.jl";
-  unix(sprintf("%s %s %s %s %s %s %s %s",julia_cmd,SAGE_Fit_julia,te1,te2,te3,te4,te5,b_fname))  
-  r2s = sprintf("%s/SAGE_R2s_Brain_julia.nii.gz",base_path);
-  r2 = sprintf("%s/SAGE_R2_Brain_julia.nii.gz",base_path);  
-  r2simg = loader(r2s);  
-  r2img = loader(r2);
-end
-
+  
 ```
 
 
