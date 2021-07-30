@@ -87,9 +87,14 @@ ti_values = [15,15,278,1007];
 ti_values = [684,4121,2730,10];
 kmf = 12.5;
 sm = 0.83;
-cmd = sprintf(“julia ./SIR_fit.jl --TI %s --TD %s --kmf %s --Sm %s --SIR_Data %s --SIR_brainMask %s”, ti_values, td_values, kmf, sm, SIR_4D_DATA, brain_mask)
-disp(cmd)
-system(cmd)                                   % alternatively, use unix(cmd)
+julia_call(ti_values, td_values, kmf, sm, SIR_4D_DATA, brain_mask)
+  
+function julia_call(ti,td,kmf,sm,data,mask)
+  cmd = sprintf(“julia ./SIR_fit.jl --TI %s --TD %s --kmf %s --Sm %s --SIR_Data %s --SIR_brainMask %s”, ti, td, kmf, sm, data, mask)
+  disp(cmd)
+  system(cmd)                                   % alternatively, use unix(cmd)
+end
+  
 ```
 
 
