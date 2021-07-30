@@ -38,7 +38,7 @@ Then open and run the SIR_qMT_test.ipynb from your local device.
 
 Make sure you change the <PATH> to the absolute path of your SIR data and brain mask.
   
-The dimensions of your SIR_Data file must be [nx,ny,nz,nd] where nd is the dynamics and nx,ny,nz are 3D matrix dims
+_The dimensions of your SIR_Data file must be __[nx,ny,nz,nd]__ where nd is the dynamics and nx,ny,nz are 3D matrix dims_
 
   Set your file path first
 ```Bash
