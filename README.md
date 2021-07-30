@@ -26,7 +26,7 @@ After that:
       Pkg.precompile() 
       notebook()
 ```
-Then open SIR_qMT_test.ipynb from your local device. 
+Then open and run the SIR_qMT_test.ipynb from your local device. 
 
 **Compare your results to our results**
 <p align="center">
