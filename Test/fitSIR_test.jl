@@ -18,11 +18,12 @@ end
 using NIfTI; 
 using LsqFit;
 using Printf
+using MAT
 
-include("/mnt/c/Users/nicks/Documents/Github/The_MRI_toolbox/Dortch_additions_ToBe_deleted/models.jl")
+include("/mnt/c/Users/nicks/Documents/Github/The_SIR-qMT_toolbox/Test/models.jl")
 
 # Load data from MATLAB
-mat = matread("/mnt/c/Users/nicks/Documents/Github/The_MRI_toolbox/Dortch_additions_ToBe_deleted/matData.mat")
+mat = matread("/mnt/c/Users/nicks/Downloads/matData.mat")
 xmat = mat["x"]
 p0mat = vec(mat["p0"])
 ynmat = mat["yn"]
@@ -49,6 +50,23 @@ end
 
 @time f() #3.366869 seconds (13.85 M allocations: 690.437 MiB, 6.12% gc time) 
 @time f() #0.047446 seconds (393.96 k allocations: 32.638 MiB, 15.25% gc time)
+
+temp = niread("/mnt/c/Users/nicks/Documents/MRI_data/PING_brains/TestRetest/output_20210618/proc_20210618/brain.nii.gz");
+temp.header
+temp2=deepcopy(temp)
+DATA = Array{Float32}(temp.raw);
+d=voxel_size(temp.header)
+voxset = (d[1],d[2],d[3])
+temp2 = NIVolume(DATA; voxel_size=(voxset))
+aff=getaffine(temp)
+aff = [d[1] 0 0 -aff[1,end];
+    0 d[2] 0 -aff[2,end];
+    0 0 d[3] aff[3,end];
+    0 0 0 1]  
+
+setaffine(temp2.header,aff)
+niwrite("/mnt/c/Users/nicks/Desktop/temp.nii.gz",temp2)
+
 
 # # Save to matlab for comparison
 # matwrite("JuliaData.mat", Dict(
