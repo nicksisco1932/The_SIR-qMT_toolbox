@@ -9,7 +9,7 @@
 
 
     Requirements:
-    - Julia 1.5
+    - Tested on Julia 1.5 and Julia 1.6 only using Windows, Linux, and MacOS
 
     Input and Output Parameters for Code
 
@@ -22,10 +22,6 @@
     Output:
         - The output from this script are three nifti files for the fitting parameters pool size ratio, R1f (free transverse relaxation rate), and Sf (field inhomogeneity)
 
-
-    Future Updates TO Do:
-        6) unit testing
-        7) depolyable docker
 
     References:
     1. R. D. Dortch, J. Moore, K. Li, M. Jankiewicz, D. F. Gochberg, J. A. Hirtle, J. C. Gore, S. A. Smith, Quantitative magnetization transfer imaging of human brain at 7T. Neuroimage. 64, 640–649 (2013).
@@ -44,7 +40,7 @@
     "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
     "   - Updated I/O \n"
     "\n",
-    "1.0  June 14, 2021 [nsisco]\n"
+    "1.0  July 14, 2021 [nsisco]\n"
     "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
     "   - Major updated I/O 
         - Change fitting function and for loop 

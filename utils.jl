@@ -42,8 +42,8 @@ function reshape_and_normalize(data_4d::Array{Float64},TI::Array{Float64},TD::Ar
 end
 
 function nlsfit(f::Function, xvalues::Array{Float64},yvalues::Array{Float64},guesses::Array{Float64})
-    # fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
-    fit = curve_fit(f,xvalues,yvalues,guesses)
+    fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
+    # fit = curve_fit(f,xvalues,yvalues,guesses)
     return fit.param
 end
 
