@@ -18,7 +18,7 @@ git clone https://github.com/nicksisco1932/The_SIR-qMT_toolbox
 
 After that:
   Do these steps
-   1) Download and install Julia 1.6
+   1) Download and install Julia 1.6 https://julialang.org/downloads/
    2) Then open the Julia app.
    3) Using the Julia REPL command line
 ```Julia
