@@ -42,16 +42,17 @@ function reshape_and_normalize(data_4d::Array{Float64},TI::Vector{Float64},TD::V
 end
 
 function nlsfit(f::Function, xvalues::Vector{T},yvalues::Vector{T},guesses::Vector{N})::Vector{T} where {T,N}
-    fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
+    # fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
+    fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:forwarddiff)
     return fit.param
 end
 
-function SIR_Mz0(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf::Float64; 
-    Sm::Float64=0.83, R1m::Float64=NaN, mag::Bool=true) where {T,N}
+function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64; 
+    Sm::Float64=0.83, R1m::Float64=NaN, mag::Bool=true) where {N} # T = 4 time points, N = parameters, P = 2
 
     # Extract ti and td values from x
-    # ti = x[:,1]
-    # td = x[:,2]
+    ti = x[:,1]
+    td = x[:,2]
 
     # Define model parameters based on p
     pmf = p[1]
@@ -111,8 +112,8 @@ function SIR_Mz0(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf::Float64;
 end
 
 
-function SIR_Mz0_R1m_not_equalR1f(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf::Float64; 
-    Sm::Float64=0.83, R1m::Float64, mag::Bool=true) where {T,N}
+function SIR_Mz0_v2(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf::Float64; 
+    Sm::Float64=0.83, R1m::Float64=NaN,mag::Bool=true)::Vector{T} where {T,N}
 
     # Extract ti and td values from x
     # ti = x[:,1]
@@ -128,65 +129,7 @@ function SIR_Mz0_R1m_not_equalR1f(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf
     # if isnan(R1m)
     #     R1m = R1f
     # end
-
-    R1m = isnan(R1m) ? R1f : R1m # this condidition is being asking thousands of times. 
-
-    # Define kfm based on kmf and pmf (assuming mass balance)
-    kfm = kmf*pmf
-
-    # Apparent rate constants
-    ΔR1 = sqrt((R1f-R1m+kfm-kmf)^2.0 + 4.0*kfm*kmf)
-    R1⁺ = (R1f + R1m + kfm + kmf + ΔR1) / 2.0
-    R1⁻ = R1⁺ - ΔR1
-
-    # Component amplitudes for td terms
-    bf_td⁺ = -(R1f - R1⁻) / ΔR1
-    bf_td⁻ =  (R1f - R1⁺) / ΔR1
-    bm_td⁺ = -(R1m - R1⁻) / ΔR1
-    bm_td⁻ =  (R1m - R1⁺) / ΔR1
-
-    # Loop over ti/td values
-    # make this a new function
-    M = similar(ti)
-    for (k,ii) in enumerate(ti)
-        # Signal recovery during td
-        E_td⁺ = exp(-R1⁺*td[k])
-        E_td⁻ = exp(-R1⁻*td[k])
-        Mf_td = bf_td⁺*E_td⁺ + bf_td⁻*E_td⁻ + 1
-        Mm_td = bm_td⁺*E_td⁺ + bm_td⁻*E_td⁻ + 1
-
-        # Component amplitude terms for ti terms
-        a = Sf*Mf_td - 1.0
-        b = (Sf*Mf_td - Sm*Mm_td) * kfm
-        bf_ti⁺ =  (a*(R1f-R1⁻) + b) / ΔR1
-        bf_ti⁻ = -(a*(R1f-R1⁺) + b) / ΔR1
-
-        # Signal recovery during ti
-        M[k] = (bf_ti⁺*exp(-R1⁺*ii) + bf_ti⁻*exp(-R1⁻*ii) + 1.0) * Mf∞
-        M[k] = mag_abs(mag,M[k])
-        # M[k] = typeof(M[k]) == Float64 ? Float64(M) : M[k]
-    end
-
-    return oftype(ti,M)
-end
-
-function SIR_Mz0_v2_R1fR1m(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf::Float64; 
-    Sm::Float64=0.83, mag::Bool=true)::Vector{T} where {T,N}
-
-    # Extract ti and td values from x
-    # ti = x[:,1]
-    # td = x[:,2]
-
-    # Define model parameters based on p
-    pmf = p[1]
-    R1f = p[2]
-    Sf  = p[3]
-    Mf∞ = p[4]
-
-    # Define R1m based on user-defined value (=R1f when set to NaN)
-    # if isnan(R1m)
-    #     R1m = R1f
-    # end
+    R1m = isnan(R1m) ? R1f : R1m
 
     R1m = R1f
 
@@ -206,7 +149,7 @@ function SIR_Mz0_v2_R1fR1m(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf::Float
 
     # Loop over ti/td values
     # make this a new function
-    M = similar(ti)
+    M = similar(ti,T)
     for k in 1:length(td)
         # Signal recovery during td
         E_td⁺ = exp(-R1⁺*td[k])
@@ -222,10 +165,8 @@ function SIR_Mz0_v2_R1fR1m(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf::Float
 
         # Signal recovery during ti
         M[k] = (bf_ti⁺*exp(-R1⁺*ti[k]) + bf_ti⁻*exp(-R1⁻*ti[k]) + 1.0) * Mf∞
-        M[k] = mag_abs(mag,M[k])
+        M[k] = mag == true ? abs(M[k]) : M[k]
     end
 
     M
 end
-
-mag_abs(mag::Bool,x::Float64) = mag == true ? abs(x) : x

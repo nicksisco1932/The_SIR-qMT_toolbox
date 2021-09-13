@@ -191,7 +191,7 @@ function main(a)
     
     mag=true;
     # model(x,p) = SIR_Mz0(x,p,vec(td_times),kmfmat,Sm=Smmat,R1m=NaN,mag=true)
-    model(x,p) = SIR_Mz0_v2_R1fR1m(x,p,vec(td_times),kmfmat,Sm=Smmat,mag=true)  
+    model(x,p) = SIR_Mz0_v2(x,p,vec(td_times),kmfmat,Sm=Smmat,R1m=NaN,mag=true)  
 
     # function f() # anonymous function for fitting
             
