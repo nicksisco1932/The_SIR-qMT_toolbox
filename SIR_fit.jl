@@ -46,6 +46,11 @@
         - Change fitting function and for loop 
         - Dramatic improvement in speed 
         \n"
+    "1.1  July 14, 2021 [nsisco]\n"
+    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
+    "    - Another dramatic improvement in speed 
+    "    - Removed some conditionals and made type-stable
+        \n"    
 
 =#
 using Pkg	
@@ -104,7 +109,7 @@ function commandline()
             help = "Sm value, unless >3T this is 0.83"
     end
 
-    println(parse_args(settings))
+    # println(parse_args(settings))
 
     # parsed_args = SIR_parse_commandline();
     for (out, val) in parse_args(settings)
@@ -155,9 +160,6 @@ function main(a)
     ----------------------------------------------
     =#
 
-    thr = Threads.nthreads()
-    println("Fitting with $thr threads")
-
     
     #=----------------------------------------------
     Setting up data to be fit
@@ -176,35 +178,29 @@ function main(a)
 
     tot_voxels,times,Yy = reshape_and_normalize( DATA,ti_times,td_times,nx,ny,nz,nt);
 
-    tmpOUT = Array{Float64}(zeros(4,tot_voxels));
+    # tmpOUT = Array{Float64}(zeros(4,tot_voxels));
+    tmpOUT = Array{Float64}(zeros(tot_voxels,4))
     vec_mask = reshape(MASK,(tot_voxels));
-
+    ind = findall(x->x==Bool(1),vec_mask)
 
     #=----------------------------------------------
     Setting up data to be fit END
     ----------------------------------------------
     =#
 
-
-    #=----------------------------------------------
-    Fit END
-    ----------------------------------------------
-    =#
     
     mag=true;
-    model(x,p) = SIR_Mz0(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true) 
+    # model(x,p) = SIR_Mz0(x,p,vec(td_times),kmfmat,Sm=Smmat,R1m=NaN,mag=true)
+    model(x,p) = SIR_Mz0_v2_R1fR1m(x,p,vec(td_times),kmfmat,Sm=Smmat,mag=true)  
 
-    function f() # anonymous function for fitting
-        begin
-            Threads.@threads for ii in 1:tot_voxels
-                if vec_mask[ii]
-                    tmpOUT[:,ii] = nlsfit(model,times,Yy[:,ii],X0)
-                end #if
-            end #for
-        end #begin
-    end #f()
+    # function f() # anonymous function for fitting
+            
+    # end #f()
 
-    @time f() # Fitting call
+    # @time f() # Fitting call
+    
+    Yy = copy(Yy')
+    Xv = f(ind,model,ti_times,Yy,X0)
 
     #=----------------------------------------------
     Fit END
@@ -214,14 +210,21 @@ function main(a)
     #= 
     Finishing up 
     =#
-    Xv = tmpOUT;
-    Xv = reshape(Xv,4,nx,ny,nz);
-    PSR = zeros(nx,ny,nz);
-    R1f = zeros(nx,ny,nz);
-    Sf = zeros(nx,ny,nz);
-    PSR = Xv[1,:,:,:]*100;
-    R1f = Xv[2,:,:,:];
-    Sf = Xv[3,:,:,:];
+    # Xv = tmpOUT;
+    # Xv = reshape(Xv,4,nx,ny,nz);
+    # PSR = zeros(nx,ny,nz);
+    # R1f = zeros(nx,ny,nz);
+    # Sf = zeros(nx,ny,nz);
+    # PSR = Xv[1,:,:,:]*100;
+    # R1f = Xv[2,:,:,:];
+    # Sf = Xv[3,:,:,:];
+
+    # PSR = reshape(Xv[1,:].*100,nx,ny,nz)
+    # R1f = reshape(Xv[2,:],nx,ny,nz)
+    # Sf = reshape(Xv[3,:],nx,ny,nz)
+    PSR = reshape(Xv[:,1].*100,nx,ny,nz)
+    R1f = reshape(Xv[:,2],nx,ny,nz)
+    Sf = reshape(Xv[:,3],nx,ny,nz)
 
 
     PSR[findall(x->x.>100,PSR)].=0
@@ -249,11 +252,37 @@ function main(a)
 
     niwrite(fname_1,NIVolume(temp2;voxel_size=(tmp1,tmp2,tmp3)))
 
+    println(" ")
+    println(" ")
+    println(" ")
     println("The PSR is saved at $PSR_fname")
     println("The R1f is saved at $R1f_fname")
     println("The Sf is saved at $SF_fname")
-    println("The original data was copied to $fname_1 in the same image space as $PSR_fname")
+    println("The original data was copied to $fname_1")
+    println(" in the same image space as the PSR map")
+end
+
+
+function f(ind::Vector{N},model::Function,ti_times::Vector{Y},Yy::Matrix{Float64},X0::Vector{M})::Matrix{Float64} where {Y,M,N}
+    tot,p = size(Yy)
+    tmpOUT = Matrix{eltype(Yy)}(undef,tot,4)
+    # @time @simd for ii in ind
+    t = @elapsed @simd for ii in ind
+        @inbounds tmpOUT[ii,:] = nlsfit(model,vec(ti_times),vec(Yy[ii,:]),vec(X0))
+    end #for
+    println("The actual fit took $t seconds")
+    perS=Int(floor(tot/t))
+    println("$perS voxels per second")
+    tmpOUT
 end
 
 A = commandline()
-@time main(A)
+println(" ")
+println(" ")
+println(" ")
+tt = @elapsed main(A)
+
+println(" ")
+println(" ")
+println(" ")
+println("The entire script took $tt seconds")
