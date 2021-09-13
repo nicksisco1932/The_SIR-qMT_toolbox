@@ -170,7 +170,6 @@ function SIR_Mz0_R1m_not_equalR1f(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf
     return oftype(ti,M)
 end
 
-
 function SIR_Mz0_v2_R1fR1m(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf::Float64; 
     Sm::Float64=0.83, mag::Bool=true)::Vector{T} where {T,N}
 

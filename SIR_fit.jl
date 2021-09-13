@@ -222,6 +222,10 @@ function main(a)
     # PSR = reshape(Xv[1,:].*100,nx,ny,nz)
     # R1f = reshape(Xv[2,:],nx,ny,nz)
     # Sf = reshape(Xv[3,:],nx,ny,nz)
+
+
+
+    
     PSR = reshape(Xv[:,1].*100,nx,ny,nz)
     R1f = reshape(Xv[:,2],nx,ny,nz)
     Sf = reshape(Xv[:,3],nx,ny,nz)
@@ -260,14 +264,16 @@ function main(a)
     println("The Sf is saved at $SF_fname")
     println("The original data was copied to $fname_1")
     println(" in the same image space as the PSR map")
+    
 end
 
+using BenchmarkTools
 
 function f(ind::Vector{N},model::Function,ti_times::Vector{Y},Yy::Matrix{Float64},X0::Vector{M})::Matrix{Float64} where {Y,M,N}
     tot,p = size(Yy)
     tmpOUT = Matrix{eltype(Yy)}(undef,tot,4)
-    # @time @simd for ii in ind
-    t = @elapsed @simd for ii in ind
+    # @time @simd for ii in ind::Vector{N}
+    t = @elapsed @simd for ii in ind::Vector{N} # multi threading is actually slower
         @inbounds tmpOUT[ii,:] = nlsfit(model,vec(ti_times),vec(Yy[ii,:]),vec(X0))
     end #for
     println("The actual fit took $t seconds")
