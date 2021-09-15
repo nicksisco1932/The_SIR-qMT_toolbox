@@ -38,12 +38,12 @@ function reshape_and_normalize(data_4d::Array{Float64},TI::Vector{Float64},TD::V
     Yy[findall(x->isinf(x),Yy)].=0
     Yy[findall(x->isnan(x),Yy)].=0
 
-    return tot_voxels,vec(X),Yy
+    return tot_voxels,X,Yy
 end
 
-function nlsfit(f::Function, xvalues::Vector{T},yvalues::Vector{T},guesses::Vector{N})::Vector{T} where {T,N}
-    # fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
-    fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:forwarddiff)
+function nlsfit(f::Function, xvalues::Array{T,2},yvalues::Vector{T},guesses::Vector{N})::Vector{T} where {T,N}
+    fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
+    # fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:forwarddiff)
     return fit.param
 end
 
@@ -112,12 +112,12 @@ function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64;
 end
 
 
-function SIR_Mz0_v2(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf::Float64; 
-    Sm::Float64=0.83, R1m::Float64=NaN,mag::Bool=true)::Vector{T} where {T,N}
+function SIR_Mz0_v2(x::Array{N,T}, p::Vector{P}, kmf; 
+    Sm=0.83, R1m=NaN,mag::Bool=true)::Vector{N} where {N,T,P}
 
     # Extract ti and td values from x
-    # ti = x[:,1]
-    # td = x[:,2]
+    @views ti = x[:,1]
+    @views td = x[:,2]
 
     # Define model parameters based on p
     pmf = p[1]
@@ -149,7 +149,7 @@ function SIR_Mz0_v2(ti::Vector{T}, p::Vector{N},td::Vector{T}, kmf::Float64;
 
     # Loop over ti/td values
     # make this a new function
-    M = similar(ti,T)
+    M = Vector{eltype(ti)}(similar(ti))
     for k in 1:length(td)
         # Signal recovery during td
         E_td⁺ = exp(-R1⁺*td[k])

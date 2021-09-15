@@ -153,7 +153,7 @@ function main(a)
     end
     kmfmat = a["kmf"][1]
     Smmat=a["Sm"][1]
-    X0 = Array{Float64}([0.07, 1, -1, 1.5]);
+    X0 = [0.07, 1, -1, 1.5];
 
     #=----------------------------------------------
     Variable Definitions END
@@ -179,7 +179,7 @@ function main(a)
     tot_voxels,times,Yy = reshape_and_normalize( DATA,ti_times,td_times,nx,ny,nz,nt);
 
     # tmpOUT = Array{Float64}(zeros(4,tot_voxels));
-    tmpOUT = Array{Float64}(zeros(tot_voxels,4))
+    
     vec_mask = reshape(MASK,(tot_voxels));
     ind = findall(x->x==Bool(1),vec_mask)
 
@@ -191,7 +191,8 @@ function main(a)
     
     mag=true;
     # model(x,p) = SIR_Mz0(x,p,vec(td_times),kmfmat,Sm=Smmat,R1m=NaN,mag=true)
-    model(x,p) = SIR_Mz0_v2(x,p,vec(td_times),kmfmat,Sm=Smmat,R1m=NaN,mag=true)  
+    # model(x,p) = SIR_Mz0_v2(x,p,vec(td_times),kmfmat,Sm=Smmat,R1m=NaN,mag=true)  
+    model(x,p) = SIR_Mz0_v2(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)  
 
     # function f() # anonymous function for fitting
             
@@ -200,7 +201,8 @@ function main(a)
     # @time f() # Fitting call
     
     Yy = copy(Yy')
-    Xv = f(ind,model,ti_times,Yy,X0)
+    # Xv = f(ind,model,ti_times,Yy,X0)
+    Xv = f(ind,model,times,Yy,X0)
 
     #=----------------------------------------------
     Fit END
@@ -267,14 +269,13 @@ function main(a)
     
 end
 
-using BenchmarkTools
-
-function f(ind::Vector{N},model::Function,ti_times::Vector{Y},Yy::Matrix{Float64},X0::Vector{M})::Matrix{Float64} where {Y,M,N}
+function f(ind,model,X,Yy,X0)
     tot,p = size(Yy)
     tmpOUT = Matrix{eltype(Yy)}(undef,tot,4)
+    
     # @time @simd for ii in ind::Vector{N}
-    t = @elapsed @simd for ii in ind::Vector{N} # multi threading is actually slower
-        @inbounds tmpOUT[ii,:] = nlsfit(model,vec(ti_times),vec(Yy[ii,:]),vec(X0))
+    t = @elapsed @simd for ii in ind # multi threading is actually slower
+        @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
     end #for
     println("The actual fit took $t seconds")
     perS=Int(floor(tot/t))
