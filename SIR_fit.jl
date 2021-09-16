@@ -56,31 +56,42 @@
     "    - forwarddiff working 
         \n"    
 
+    "2.0  Sept 16, 2021 [nsisco]\n"
+    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
+    "    - Python nibabel read/write implimented 
+        \n"    
 =#
+
+ENV["PYTHON"] = "/mnt/c/Users/nicks/Documents/Github/The_SIR-qMT_toolbox/venv/bin/python"
 using Pkg	
 try
     println("If is first time you ran the code. It will take a minute to precompile.")
-    @eval using NIfTI; 
+    @eval using PyCall; 
     @eval using LsqFit;
-    @eval using Printf
+    
     @eval using ArgParse;
     Pkg.precompile()
 catch e
     # not found; install and try loading again
-    Pkg.add("NIfTI")
+    Pkg.add("PyCall")
     Pkg.add("LsqFit")
-    Pkg.add("Printf")
+    
     Pkg.add("ArgParse")
-    @eval using NIfTI; 
+    @eval using PyCall; 
     @eval using LsqFit;
-    @eval using Printf
+    
     @eval using ArgParse;
 end
 
-using NIfTI; 
-using LsqFit;
-using Printf
-using ArgParse;
+
+using PyCall
+using LsqFit
+
+using ArgParse
+nib = pyimport("nibabel")
+
+
+
 
 #=----------------------------------------------
     Commandline Arguments
@@ -169,16 +180,19 @@ function main(a)
     Setting up data to be fit
     ----------------------------------------------
     =#
-    nx,ny,nz,nt = size(niread(paths))
-    temp=niread(paths)
-    temp2=Array{Float64}(temp.raw)
+    img_data = nib.load(paths)
+    data = img_data.get_fdata()
+    nx,ny,nz,nt = size(data)
+
     tempdata=Array{Float64}(zeros(nt,nx,ny,nz))
     for ii in 1:nt
-        tempdata[ii,:,:,:] = temp2[:,:,:,ii];
+        tempdata[ii,:,:,:] = data[:,:,:,ii];
     end
     DATA=tempdata;
-    MASKtmp = niread(b_fname);
-    MASK=Array{Bool}(MASKtmp.raw);
+    # MASKtmp = niread(b_fname);
+    MASKtmp = nib.load(b_fname);
+    # MASK=Array{Bool}(MASKtmp.raw);
+    MASK=Array{Bool}(MASKtmp.get_fdata());
 
     tot_voxels,times,Yy = reshape_and_normalize( DATA,ti_times,td_times,nx,ny,nz,nt);
     
@@ -218,31 +232,37 @@ function main(a)
     Sf[findall(x->x.>10,Sf)].=0
     Sf[findall(x->x.<-10,Sf)].=0
 
-    d=niread(paths);
+    # d=niread(paths);tmp1 = voxel_size(d.header)[1];tmp2 = voxel_size(d.header)[2];tmp3 = voxel_size(d.header)[3]
 
-    tmp1 = voxel_size(d.header)[1]
-    tmp2 = voxel_size(d.header)[2]
-    tmp3 = voxel_size(d.header)[3]
+    # PSR_fname = @sprintf("%s/SIR_Brain_PSR_julia.nii.gz",base)
+    # R1f_fname = @sprintf("%s/SIR_Brain_R1f_julia.nii.gz",base)
+    # SF_fname = @sprintf("%s/SIR_Brain_Sf_julia.nii.gz",base)
+    PSR_fname = joinpath(base,"SIR_Brain_PSR_julia.nii.gz")
+    R1f_fname = joinpath(base,"SIR_Brain_R1f_julia.nii.gz")
+    Sf_fname = joinpath(base,"SIR_Brain_Sf_julia.nii.gz")
 
-    PSR_fname = @sprintf("%s/SIR_Brain_PSR_julia.nii.gz",base)
-    R1f_fname = @sprintf("%s/SIR_Brain_R1f_julia.nii.gz",base)
-    SF_fname = @sprintf("%s/SIR_Brain_Sf_julia.nii.gz",base)
+    # fname_1 = joinpath(base,"SIR_DATA.nii.gz")
+    # niwrite(PSR_fname,NIVolume(PSR;voxel_size=(tmp1,tmp2,tmp3)))
+    # niwrite(R1f_fname,NIVolume(R1f;voxel_size=(tmp1,tmp2,tmp3)))
+    # niwrite(SF_fname,NIVolume(Sf;voxel_size=(tmp1,tmp2,tmp3)))
 
-    fname_1 = @sprintf("%s/SIR_DATA.nii.gz",base)
-    niwrite(PSR_fname,NIVolume(PSR;voxel_size=(tmp1,tmp2,tmp3)))
-    niwrite(R1f_fname,NIVolume(R1f;voxel_size=(tmp1,tmp2,tmp3)))
-    niwrite(SF_fname,NIVolume(Sf;voxel_size=(tmp1,tmp2,tmp3)))
+    
+    affine = img_data.affine
+    header = img_data.header
 
-    niwrite(fname_1,NIVolume(temp2;voxel_size=(tmp1,tmp2,tmp3)))
+    PSR_img = nib.Nifti1Image(PSR,affine,header)
+    nib.save(PSR_img,PSR_fname)
+    R1f_img = nib.Nifti1Image(R1f,affine,header)
+    nib.save(R1f_img,R1f_fname)
+    Sf_img = nib.Nifti1Image(Sf,affine,header)
+    nib.save(Sf_img,Sf_fname)
 
     println(" ")
     println(" ")
     println(" ")
     println("The PSR is saved at $PSR_fname")
     println("The R1f is saved at $R1f_fname")
-    println("The Sf is saved at $SF_fname")
-    println("The original data was copied to $fname_1")
-    println(" in the same image space as the PSR map")
+    println("The Sf is saved at $Sf_fname")
     
 end
 
