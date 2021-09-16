@@ -252,6 +252,7 @@ function f(ind::Vector{N},model::Function,X::Array{T,2},Yy::Array{T,M},X0::Vecto
     
     # @time @simd for ii in ind::Vector{N}
     t = @elapsed @simd for ii in ind # multi threading is actually slower
+    # t = @elapsed Threads.@threads for ii in ind # multi threading is actually slower
         @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
     end 
     println("The actual fit took $t seconds")

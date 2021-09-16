@@ -22,8 +22,8 @@ function reshape_and_normalize(data_4d::Array{Float64},TI::Vector{Float64},TD::V
     X=hcat(TI,TD)
     tmp = reshape(data_4d,(NT,tot_voxels));
     Yy = similar(tmp)
-    for ii in 1:tot_voxels
-        Yy[:,ii] = tmp[:,ii] / (tmp[end, ii])
+    @simd for ii in 1:tot_voxels
+        @inbounds Yy[:,ii] = tmp[:,ii] / (tmp[end, ii])
     end
 
     Yy[findall(x->isinf(x),Yy)].=0
