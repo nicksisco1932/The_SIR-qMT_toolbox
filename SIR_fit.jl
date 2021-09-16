@@ -189,10 +189,9 @@ function main(a)
     =#
 
     
-    mag=true;
-    # model(x,p) = SIR_Mz0(x,p,vec(td_times),kmfmat,Sm=Smmat,R1m=NaN,mag=true)
+    model(x,p) = SIR_Mz0(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)
     # model(x,p) = SIR_Mz0_v2(x,p,vec(td_times),kmfmat,Sm=Smmat,R1m=NaN,mag=true)  
-    model(x,p) = SIR_Mz0_v2(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)  
+    # model(x,p) = SIR_Mz0_v2(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)  
 
     # function f() # anonymous function for fitting
             
@@ -269,13 +268,15 @@ function main(a)
     
 end
 
-function f(ind,model,X,Yy,X0)
+function f(ind::Vector{N},model::Function,X::Array{T,2},Yy::Array{T,M},X0::Vector{P})::Array{P,M} where {N,M,T,P} 
     tot,p = size(Yy)
-    tmpOUT = Matrix{eltype(Yy)}(undef,tot,4)
+    tmpOUT = Array{eltype(Yy)}(undef,tot,4)
     
     # @time @simd for ii in ind::Vector{N}
     t = @elapsed @simd for ii in ind # multi threading is actually slower
         @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
+        # model(X,X0)
+
     end #for
     println("The actual fit took $t seconds")
     perS=Int(floor(tot/t))

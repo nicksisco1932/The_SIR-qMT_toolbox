@@ -29,8 +29,7 @@ function reshape_and_normalize(data_4d::Array{Float64},TI::Vector{Float64},TD::V
     tot_voxels = NX*NY*NZ
     X=hcat(TI,TD)
     tmp = reshape(data_4d,(NT,tot_voxels));
-    Yy=Array{Float64}(zeros(size(tmp)))
-    
+    Yy = similar(tmp)
     for ii in 1:tot_voxels
         Yy[:,ii] = tmp[:,ii] / (tmp[end, ii])
     end
@@ -42,17 +41,21 @@ function reshape_and_normalize(data_4d::Array{Float64},TI::Vector{Float64},TD::V
 end
 
 function nlsfit(f::Function, xvalues::Array{T,2},yvalues::Vector{T},guesses::Vector{N})::Vector{T} where {T,N}
-    fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
-    # fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:forwarddiff)
+    # f(xvalues,guesses)
+    
+    # yvalues
+    
+    # fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
+    fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:forwarddiff)
     return fit.param
 end
 
 function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64; 
-    Sm::Float64=0.83, R1m::Float64=NaN, mag::Bool=true) where {N} # T = 4 time points, N = parameters, P = 2
+    Sm::Float64=0.83, R1m::Float64=NaN, mag::Bool=true)::Vector{N} where {N} # N = parameters
 
     # Extract ti and td values from x
-    ti = x[:,1]
-    td = x[:,2]
+    @views ti = x[:,1]
+    @views td = x[:,2]
 
     # Define model parameters based on p
     pmf = p[1]
@@ -81,8 +84,8 @@ function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64;
 
     # Loop over ti/td values
     # make this a new function
-    M = similar(ti)
-    for k in 1:length(td)
+    M = similar(ti,N)
+    @simd for k in 1:length(td)
 
         # Signal recovery during td
         E_td⁺ = exp(-R1⁺*td[k])
@@ -108,7 +111,7 @@ function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64;
     
 
     # Return signal
-    return vec(M)
+    return M
 end
 
 
@@ -120,10 +123,10 @@ function SIR_Mz0_v2(x::Array{N,T}, p::Vector{P}, kmf;
     @views td = x[:,2]
 
     # Define model parameters based on p
-    pmf = p[1]
-    R1f = p[2]
-    Sf  = p[3]
-    Mf∞ = p[4]
+    @views pmf = p[1]
+    @views R1f = p[2]
+    @views Sf  = p[3]
+    @views Mf∞ = p[4]
 
     # Define R1m based on user-defined value (=R1f when set to NaN)
     # if isnan(R1m)
