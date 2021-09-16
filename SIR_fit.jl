@@ -62,7 +62,14 @@
         \n"    
 =#
 
-ENV["PYTHON"] = "/mnt/c/Users/nicks/Documents/Github/The_SIR-qMT_toolbox/venv/bin/python"
+python_path = "/mnt/c/Users/nicks/Documents/Github/The_SIR-qMT_toolbox/venv/bin/python"
+if isfile(python_path)
+    ENV["PYTHON"] = python_path
+else
+    println("This script needs a Python path to your venv python executable")
+    println("Ex: <ABS_PATH>/venv/bin/python")
+end
+
 using Pkg	
 try
     println("If is first time you ran the code. It will take a minute to precompile.")
