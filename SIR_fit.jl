@@ -270,7 +270,7 @@ end
 
 function f(ind::Vector{N},model::Function,X::Array{T,2},Yy::Array{T,M},X0::Vector{P})::Array{P,M} where {N,M,T,P} 
     tot,p = size(Yy)
-    tmpOUT = Array{eltype(Yy)}(undef,tot,4)
+    tmpOUT = similar(Yy,tot,4)
     
     # @time @simd for ii in ind::Vector{N}
     t = @elapsed @simd for ii in ind # multi threading is actually slower
