@@ -46,10 +46,14 @@
         - Change fitting function and for loop 
         - Dramatic improvement in speed 
         \n"
-    "1.1  July 14, 2021 [nsisco]\n"
+    "1.1  Sept 8, 2021 [nsisco]\n"
     "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
     "    - Another dramatic improvement in speed 
     "    - Removed some conditionals and made type-stable
+        \n"    
+    "1.2  Sept 16, 2021 [nsisco]\n"
+    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
+    "    - forwarddiff working 
         \n"    
 
 =#
@@ -177,8 +181,6 @@ function main(a)
     MASK=Array{Bool}(MASKtmp.raw);
 
     tot_voxels,times,Yy = reshape_and_normalize( DATA,ti_times,td_times,nx,ny,nz,nt);
-
-    # tmpOUT = Array{Float64}(zeros(4,tot_voxels));
     
     vec_mask = reshape(MASK,(tot_voxels));
     ind = findall(x->x==Bool(1),vec_mask)
@@ -190,17 +192,8 @@ function main(a)
 
     
     model(x,p) = SIR_Mz0(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)
-    # model(x,p) = SIR_Mz0_v2(x,p,vec(td_times),kmfmat,Sm=Smmat,R1m=NaN,mag=true)  
-    # model(x,p) = SIR_Mz0_v2(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)  
-
-    # function f() # anonymous function for fitting
-            
-    # end #f()
-
-    # @time f() # Fitting call
     
     Yy = copy(Yy')
-    # Xv = f(ind,model,ti_times,Yy,X0)
     Xv = f(ind,model,times,Yy,X0)
 
     #=----------------------------------------------
@@ -211,21 +204,6 @@ function main(a)
     #= 
     Finishing up 
     =#
-    # Xv = tmpOUT;
-    # Xv = reshape(Xv,4,nx,ny,nz);
-    # PSR = zeros(nx,ny,nz);
-    # R1f = zeros(nx,ny,nz);
-    # Sf = zeros(nx,ny,nz);
-    # PSR = Xv[1,:,:,:]*100;
-    # R1f = Xv[2,:,:,:];
-    # Sf = Xv[3,:,:,:];
-
-    # PSR = reshape(Xv[1,:].*100,nx,ny,nz)
-    # R1f = reshape(Xv[2,:],nx,ny,nz)
-    # Sf = reshape(Xv[3,:],nx,ny,nz)
-
-
-
     
     PSR = reshape(Xv[:,1].*100,nx,ny,nz)
     R1f = reshape(Xv[:,2],nx,ny,nz)
@@ -269,25 +247,27 @@ function main(a)
 end
 
 function f(ind::Vector{N},model::Function,X::Array{T,2},Yy::Array{T,M},X0::Vector{P})::Array{P,M} where {N,M,T,P} 
-    tot,p = size(Yy)
+    tot,_ = size(Yy)
     tmpOUT = similar(Yy,tot,4)
     
     # @time @simd for ii in ind::Vector{N}
     t = @elapsed @simd for ii in ind # multi threading is actually slower
         @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
-        # model(X,X0)
-
-    end #for
+    end 
     println("The actual fit took $t seconds")
     perS=Int(floor(tot/t))
     println("$perS voxels per second")
     tmpOUT
 end
 
+println(" ")
+println(" ")
+println(" ")
 A = commandline()
 println(" ")
 println(" ")
 println(" ")
+
 tt = @elapsed main(A)
 
 println(" ")

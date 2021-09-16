@@ -13,14 +13,6 @@
     3. R. D. Dortch, F. Bagnato, D. F. Gochberg, J. C. Gore, S. A. Smith, Optimization of selective inversion recovery magnetization transfer imaging for macromolecular content mapping in the human brain. Magn. Reson. Med. 80, 1824–1835 (2018).
     4. R. D. Dortch, K. Li, D. F. Gochberg, E. B. Welch, A. N. Dula, A. A. Tamhane, J. C. Gore, S. A. Smith, Quantitative magnetization transfer imaging in human brain at 3 T via selective inversion recovery. Magn. Reson. Med. 66, 1346–1352 (2011).
 
-    Change log:
-    "history (of nifti library changes):\n"
-    "\n",
-    "0.0  June 18, 2021 [nsisco]\n"
-    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
-    "   - initial version \n"
-    
-
 =#
 
 function reshape_and_normalize(data_4d::Array{Float64},TI::Vector{Float64},TD::Vector{Float64},NX::Int64,NY::Int64,NZ::Int64,NT)
@@ -42,7 +34,6 @@ end
 
 function nlsfit(f::Function, xvalues::Array{T,2},yvalues::Vector{T},guesses::Vector{N})::Vector{T} where {T,N}
     # f(xvalues,guesses)
-    
     # yvalues
     
     # fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
