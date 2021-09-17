@@ -250,6 +250,7 @@ function f(ind::Vector{N},model::Function,X::Array{T,2},Yy::Array{T,M},X0::Vecto
     tot,_ = size(Yy)
     tmpOUT = similar(Yy,tot,4)
     
+    
     # @time @simd for ii in ind::Vector{N}
     t = @elapsed @simd for ii in ind # multi threading is actually slower
     # t = @elapsed Threads.@threads for ii in ind # multi threading is actually slower
@@ -260,6 +261,7 @@ function f(ind::Vector{N},model::Function,X::Array{T,2},Yy::Array{T,M},X0::Vecto
     println("$perS voxels per second")
     tmpOUT
 end
+
 
 println(" ")
 println(" ")
