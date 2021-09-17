@@ -15,7 +15,7 @@
 
 =#
 
-function reshape_and_normalize(data_4d::Array{Float64},TI::Vector{Float64},TD::Vector{Float64},NX::Int64,NY::Int64,NZ::Int64,NT)
+function reshape_and_normalize(data_4d::Array{T},TI::Vector{T},TD::Vector{T},NX::Int64,NY::Int64,NZ::Int64,NT) where T
     # [pmf R1f Sf M0f]
 
     tot_voxels = NX*NY*NZ
@@ -32,7 +32,7 @@ function reshape_and_normalize(data_4d::Array{Float64},TI::Vector{Float64},TD::V
     return tot_voxels,X,Yy
 end
 
-function nlsfit(f::Function, xvalues::Array{T,2},yvalues::Vector{T},guesses::Vector{N})::Vector{T} where {T,N}
+function nlsfit(f::Function, xvalues::Array{T},yvalues::Vector{T},guesses::Vector{T})::Vector{T} where {T}
     # f(xvalues,guesses)
     # yvalues
     
@@ -76,7 +76,7 @@ function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64;
     # Loop over ti/td values
     # make this a new function
     M = similar(ti,N)
-    @simd for k in 1:length(td)
+    for k in 1:length(td) #slower with simd
 
         # Signal recovery during td
         E_td⁺ = exp(-R1⁺*td[k])
