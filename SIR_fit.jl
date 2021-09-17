@@ -82,6 +82,7 @@ using LsqFit;
 using Printf
 using ArgParse;
 
+using BenchmarkTools
 #=----------------------------------------------
     Commandline Arguments
 ----------------------------------------------
@@ -261,6 +262,7 @@ function f(ind::Vector{N},model::Function,X::Array{T},Yy::Array{T},X0::Vector{T}
     println("$perS voxels per second")
     tmpOUT
 end
+
 
 
 println(" ")
