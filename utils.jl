@@ -76,7 +76,7 @@ function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64;
     # Loop over ti/td values
     # make this a new function
     M = similar(ti,N)
-    for k in 1:length(td) #slower with simd
+    for k in 1:length(td) 
 
         # Signal recovery during td
         E_td⁺ = exp(-R1⁺*td[k])
@@ -102,5 +102,32 @@ function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64;
     
 
     # Return signal
-    return M
+    M
 end
+
+# # I think I remember this bein slower.
+# function sig_reco(ti::Vector{N},td,R1f,R1⁺,R1⁻,ΔR1,kfm,bf_td⁻,bf_td⁺,bm_td⁺,bm_td⁻,Sm,Sf,Mf∞,mag) where N
+#     M = similar(ti,N)
+#     for k in 1:length(td) #slower with simd
+
+#         # Signal recovery during td
+#         E_td⁺ = exp(-R1⁺*td[k])
+#         E_td⁻ = exp(-R1⁻*td[k])
+#         Mf_td = bf_td⁺*E_td⁺ + bf_td⁻*E_td⁻ + 1.0
+#         Mm_td = bm_td⁺*E_td⁺ + bm_td⁻*E_td⁻ + 1.0
+
+#         # Component amplitude terms for ti terms
+#         a = Sf*Mf_td - 1.0
+#         b = (Sf*Mf_td - Sm*Mm_td) * kfm
+#         bf_ti⁺ =  (a*(R1f-R1⁻) + b) / ΔR1
+#         bf_ti⁻ = -(a*(R1f-R1⁺) + b) / ΔR1
+
+#         # Signal recovery during ti
+#         M[k] = (bf_ti⁺*exp(-R1⁺*ti[k]) + bf_ti⁻*exp(-R1⁻*ti[k]) + 1.0) * Mf∞
+
+#         # Take the magnitude of the signal
+#         if mag
+#             M[k] = abs(M[k])
+#         end
+#     end
+# end
