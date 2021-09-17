@@ -32,13 +32,27 @@ function reshape_and_normalize(data_4d::Array{Float64},TI::Vector{Float64},TD::V
     return tot_voxels,X,Yy
 end
 
-function nlsfit(f::Function, xvalues::Array{T,2},yvalues::Vector{T},guesses::Vector{N})::Vector{T} where {T,N}
+function nlsfit(f::Function, xvalues::Array{T},yvalues::Matrix{T},guesses::Vector{T})::Matrix{T} where {T}
     # f(xvalues,guesses)
     # yvalues
     
     # fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
-    fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:forwarddiff)
-    return fit.param
+
+    @views Yfit = yvalues
+    @views xfit = xvalues
+    @views p0 = guesses
+    nparams = length(p0)
+    n = size(Yfit,1)
+    params = zeros(n,nparams)
+    # resids = similar(y)
+    Threads.@threads for j in 1:n
+        fit = curve_fit(f, xfit, Yfit[j,:], p0)
+        @inbounds params[j,:] = fit.param
+        # resids[:,j] = fit.resid
+    end
+    params
+    # fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:forwarddiff)
+    # return fit.param
 end
 
 function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64; 

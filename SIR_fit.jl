@@ -252,10 +252,13 @@ function f(ind::Vector{N},model::Function,X::Array{T,2},Yy::Array{T,M},X0::Vecto
     
     
     # @time @simd for ii in ind::Vector{N}
-    t = @elapsed @simd for ii in ind # multi threading is actually slower
-    # t = @elapsed Threads.@threads for ii in ind # multi threading is actually slower
-        @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
-    end 
+    # t = @elapsed @simd for ii in ind # multi threading is actually slower
+    # # t = @elapsed Threads.@threads for ii in ind # multi threading is actually slower
+    #     @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
+    # end 
+    
+    t = @elapsed tmpOUT[ind,:] = nlsfit(model,X,Yy[ind,:],X0)
+
     println("The actual fit took $t seconds")
     perS=Int(floor(tot/t))
     println("$perS voxels per second")
