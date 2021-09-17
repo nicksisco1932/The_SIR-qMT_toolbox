@@ -181,8 +181,18 @@ function main(a)
     MASKtmp = niread(b_fname);
     MASK=Array{Bool}(MASKtmp.raw);
 
-    tot_voxels,times,Yy = reshape_and_normalize( DATA,ti_times,td_times,nx,ny,nz,nt);
     
+    tot_voxels = nx*ny*nz
+    times=hcat(ti_times,td_times)
+    tmp = reshape(DATA,(nt,tot_voxels));
+    Yy = similar(tmp)
+    @simd for ii in 1:tot_voxels
+        @inbounds Yy[:,ii] = tmp[:,ii] / (tmp[end, ii])
+    end
+
+    Yy[findall(x->isinf(x),Yy)].=0
+    Yy[findall(x->isnan(x),Yy)].=0
+
     vec_mask = reshape(MASK,(tot_voxels));
     ind = findall(x->x==Bool(1),vec_mask)
 
@@ -191,11 +201,26 @@ function main(a)
     ----------------------------------------------
     =#
 
-    
     model(x,p) = SIR_Mz0(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)
     
     Yy = copy(Yy')
-    Xv = f(ind,model,times,Yy,X0)
+    # Xv = f(ind,model,times,Yy,X0)
+
+    tot,_ = size(Yy)
+    Xv = similar(Yy,tot,4)
+    
+    # @views x = X
+    
+    # @time @simd for ii in ind::Vector{N}
+    t = @elapsed for ii ∈ ind # multi threading is actually slower
+    # t = @elapsed Threads.@threads for ii in ind # multi threading is actually slower
+        # y = @views Yy[ii,:]
+        Xv[ii,:] = nlsfit(model,times,Yy[ii,:],X0)
+    end 
+    println("The actual fit took $t seconds")
+    perS=Int(floor(tot/t))
+    println("$perS voxels per second")
+    Xv
 
     #=----------------------------------------------
     Fit END
@@ -251,19 +276,19 @@ function f(ind::Vector{N},model::Function,X::Array{T},Yy::Array{T},X0::Vector{T}
     tot,_ = size(Yy)
     tmpOUT = similar(Yy,tot,4)
     
+    @views x = X
     
     # @time @simd for ii in ind::Vector{N}
-    t = @elapsed for ii in ind # multi threading is actually slower
+    t = @elapsed @inbounds @simd for ii ∈ ind # multi threading is actually slower
     # t = @elapsed Threads.@threads for ii in ind # multi threading is actually slower
-        @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
+        y = @view Yy[ii,:]
+        tmpOUT[ii,:] = nlsfit(model,x,y,X0)
     end 
     println("The actual fit took $t seconds")
     perS=Int(floor(tot/t))
     println("$perS voxels per second")
     tmpOUT
 end
-
-
 
 println(" ")
 println(" ")
@@ -274,6 +299,7 @@ println(" ")
 println(" ")
 
 tt = @elapsed main(A)
+# @btime tt = @elapsed main(A)
 
 println(" ")
 println(" ")

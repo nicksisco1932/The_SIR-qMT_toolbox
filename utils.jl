@@ -15,30 +15,14 @@
 
 =#
 
-function reshape_and_normalize(data_4d::Array{T},TI::Vector{T},TD::Vector{T},NX::Int64,NY::Int64,NZ::Int64,NT) where T
-    # [pmf R1f Sf M0f]
-
-    tot_voxels = NX*NY*NZ
-    X=hcat(TI,TD)
-    tmp = reshape(data_4d,(NT,tot_voxels));
-    Yy = similar(tmp)
-    @simd for ii in 1:tot_voxels
-        @inbounds Yy[:,ii] = tmp[:,ii] / (tmp[end, ii])
-    end
-
-    Yy[findall(x->isinf(x),Yy)].=0
-    Yy[findall(x->isnan(x),Yy)].=0
-
-    return tot_voxels,X,Yy
-end
-
-function nlsfit(f::Function, xvalues::Array{T},yvalues::Vector{T},guesses::Vector{T})::Vector{T} where {T}
+function nlsfit(f::Function, xvalues,yvalues,guesses::Vector{T}) where T
     # f(xvalues,guesses)
     # yvalues
     
     # fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:finiteforward)
     fit = curve_fit(f,xvalues,yvalues,guesses;autodiff=:forwarddiff)
-    return fit.param
+    # return fit.param
+    oftype(guesses,fit.param)
 end
 
 function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64; 
@@ -75,8 +59,9 @@ function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64;
 
     # Loop over ti/td values
     # make this a new function
-    M = similar(ti,N)
-    for k in 1:length(td) 
+    M = similar(ti,N) #<- this is allocating a lot of memory
+    # M = similar(ti,N,0)
+    for k ∈ eachindex(td) #slower with simd
 
         # Signal recovery during td
         E_td⁺ = exp(-R1⁺*td[k])
@@ -92,6 +77,7 @@ function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64;
 
         # Signal recovery during ti
         M[k] = (bf_ti⁺*exp(-R1⁺*ti[k]) + bf_ti⁻*exp(-R1⁻*ti[k]) + 1.0) * Mf∞
+        # push!(M,(bf_ti⁺*exp(-R1⁺*ti[k]) + bf_ti⁻*exp(-R1⁻*ti[k]) + 1.0) * Mf∞)
 
         # Take the magnitude of the signal
         if mag
@@ -99,35 +85,6 @@ function SIR_Mz0(x::Matrix{Float64}, p::Vector{N}, kmf::Float64;
         end
     end
 
-    
-
     # Return signal
-    M
+    return M
 end
-
-# # I think I remember this bein slower.
-# function sig_reco(ti::Vector{N},td,R1f,R1⁺,R1⁻,ΔR1,kfm,bf_td⁻,bf_td⁺,bm_td⁺,bm_td⁻,Sm,Sf,Mf∞,mag) where N
-#     M = similar(ti,N)
-#     for k in 1:length(td) #slower with simd
-
-#         # Signal recovery during td
-#         E_td⁺ = exp(-R1⁺*td[k])
-#         E_td⁻ = exp(-R1⁻*td[k])
-#         Mf_td = bf_td⁺*E_td⁺ + bf_td⁻*E_td⁻ + 1.0
-#         Mm_td = bm_td⁺*E_td⁺ + bm_td⁻*E_td⁻ + 1.0
-
-#         # Component amplitude terms for ti terms
-#         a = Sf*Mf_td - 1.0
-#         b = (Sf*Mf_td - Sm*Mm_td) * kfm
-#         bf_ti⁺ =  (a*(R1f-R1⁻) + b) / ΔR1
-#         bf_ti⁻ = -(a*(R1f-R1⁺) + b) / ΔR1
-
-#         # Signal recovery during ti
-#         M[k] = (bf_ti⁺*exp(-R1⁺*ti[k]) + bf_ti⁻*exp(-R1⁻*ti[k]) + 1.0) * Mf∞
-
-#         # Take the magnitude of the signal
-#         if mag
-#             M[k] = abs(M[k])
-#         end
-#     end
-# end
