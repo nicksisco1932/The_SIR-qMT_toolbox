@@ -13,7 +13,7 @@ https://julialang.org/downloads/
 
 - [Jupyter Notebook](https://github.com/nicksisco1932/The_SIR-qMT_toolbox#jupyter-notebook-with-julia-kernel)
 - [Command Line](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#command-line)
-  - [Results of a Successful SIR-qMT fit]()
+  - [Results of a Successful SIR-qMT fit](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#results-of-a-successful-sir-qmt-fit)
 - [Using Python or MATLAB](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#using-matlab-or-python-to-call-julia-examples)
   - [Python](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#python)
   - [MATLAB](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#matlab)
