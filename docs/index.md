@@ -1,6 +1,10 @@
 # The MRI Toolbox
 
 ## Table of contents
+- [Introduction](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#introduction)
+- [Selective Inversion Recovery](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#introduction)
+- [Matrix formulation](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#introduction)
+- [General formulation](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#introduction)
 
 ## Introduction
 
