@@ -12,8 +12,8 @@ The first thing you will have to do is download and install Julia!
 https://julialang.org/downloads/
 
 - [Jupyter Notebook](https://github.com/nicksisco1932/The_SIR-qMT_toolbox#jupyter-notebook-with-julia-kernel)
-- [Command Line]
-  - [Results of a Successful SIR-qMT fit]
+- [Command Line](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#command-line)
+  - [Results of a Successful SIR-qMT fit]()
 - [Using Python or MATLAB](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#using-matlab-or-python-to-call-julia-examples)
   - [Python](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#python)
   - [MATLAB](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#matlab)
@@ -61,7 +61,7 @@ julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data $SIR_4D_
 ```
 
 
-**Results of a Successful SIR-qMT fit**
+## Results of a Successful SIR-qMT fit
 <p align="center">
   <img src="https://github.com/nicksisco1932/The_MRI_toolbox/blob/master/Images/Brain_Figure.png" alt="drawing" width="400"/>
 </p>
