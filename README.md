@@ -15,8 +15,8 @@ https://julialang.org/downloads/
 - [Command Line]
   - [Results of a Successful SIR-qMT fit]
 - [Using Python or MATLAB](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#using-matlab-or-python-to-call-julia-examples)
-- [Python]()
-- [MATLAB]()
+  - [Python](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#python)
+  - [MATLAB](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#matlab)
 
 # Jupyter Notebook with Julia kernel
 If you have not cloned this repository, you can download the zip in the top right of this page or if you are familiar with git, use this. 
