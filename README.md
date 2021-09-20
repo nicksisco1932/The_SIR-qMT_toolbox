@@ -11,6 +11,12 @@ Welcome to the magnetic resonance toolbox. The main pipeline shown here are for 
 The first thing you will have to do is download and install Julia! 
 https://julialang.org/downloads/
 
+- [Jupyter Notebook](https://github.com/nicksisco1932/The_SIR-qMT_toolbox#jupyter-notebook-with-julia-kernel)
+- [Command Line]
+  - [Results of a Successful SIR-qMT fit]
+- [Python]
+- [MATLAB]
+
 # Jupyter Notebook with Julia kernel
 If you have not cloned this repository, you can download the zip in the top right of this page or if you are familiar with git, use this. 
 
