@@ -2,9 +2,9 @@
 
 ## Table of contents
 - [Introduction](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#introduction)
-- [Selective Inversion Recovery](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#introduction)
-- [Matrix formulation](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#introduction)
-- [General formulation](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#introduction)
+- [Selective Inversion Recovery](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#selective-inversion-recovery)
+- [Matrix formulation](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#matrix-formulation)
+- [General formulation](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md#general-formulation)
 
 ## Introduction
 
