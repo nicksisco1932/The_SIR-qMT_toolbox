@@ -4,7 +4,7 @@
   <img src="https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/Images/MR_logo_big.png" alt="drawing" width="400"/>
 </p>
 
-![example workflow](https://img.shields.io/badge/docs-blue.svg)
+[![]](https://img.shields.io/badge/docs-blue.svg)(https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/docs/index.md)
 
 Welcome to the magnetic resonance toolbox. The main pipeline shown here are for processing quantitative magnetization transfer imaging using selective inversion recovery (SIR-qMT). All the fitting is implemented using Julia, which is computationally fast but still readable.
 
