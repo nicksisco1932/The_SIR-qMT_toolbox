@@ -16,6 +16,8 @@ The selective inversion recovery experiment relies on the following scheme for i
 
 where the first $\pi$ proceeds the Hahn echo, or spin echo, sequence by a time delay called TI (inversion time). The effect of this is to polarize the spin vectors into a high energy state, which is against the static magnetic field. The polarized spin vectors are then allowed to recover for a specific amount of time, which is the inversion time. At the end of this time, the spins are irradiated with the Hahn echo sequence to polarize the spins into the transverse plane and then to refocus the dephasing spins. The relaxation from this final refocusing pulse is detected and thus the spins magnetization are separated according to their inversion recovery from the initial $\pi$ pulse. The overall effect is that the spins that have high degrees of freedom to relax tend to have short relaxation times. 
 
+
+### Matrix formulation
 The time evolution of the magnetization vector in _x_, _y_, and _z_ planes can be expressed as a matrix: 
 
 <img src="https://latex.codecogs.com/svg.image?A&space;=&space;\begin{bmatrix}&space;&space;&space;-R_{2f}&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&&space;&space;\Delta\omega&space;&space;&space;&space;&space;&space;&space;&space;&&space;-\omega_1\sin\phi&space;&&space;0\\&space;&space;&space;-\Delta\omega&space;&space;&space;&space;&space;&space;&space;&&space;&space;-R_{2f}&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&&space;\omega_1\cos\phi&space;&&space;&space;0&space;\\&space;&space;&space;\omega_1\sin\phi&space;&space;&&space;&space;-\omega_1\cos\phi&space;&&space;-(R_{1f}&space;&plus;&space;k_{mf})&space;&space;&&space;k_{mf}&space;\\&space;&space;&space;0&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;0&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&&space;&space;k_{mf}&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&space;&&space;-(R_{1m}&plus;R_{RF}&plus;k_{mf})&space;\\&space;\end{bmatrix}" title="A = \begin{bmatrix} -R_{2f} & \Delta\omega & -\omega_1\sin\phi & 0\\ -\Delta\omega & -R_{2f} & \omega_1\cos\phi & 0 \\ \omega_1\sin\phi & -\omega_1\cos\phi & -(R_{1f} + k_{mf}) & k_{mf} \\ 0 & 0 & k_{mf} & -(R_{1m}+R_{RF}+k_{mf}) \\ \end{bmatrix}" />
@@ -65,9 +67,10 @@ where $M_0$ is the longitudinal magnetization vector, $I$ is the identity matrix
 
 When $S_f =1$ there is complete inversion of $M_{fm}$ and when $S_m = -1$ there is no saturation of the magnetization $M_{zm}$
 
-## Work in progress
+### General formulation
+_This form was used in the Julia code_
 
-Temp math
+
 <p align="center">
 <img src="https://latex.codecogs.com/svg.latex?\space\frac{M_f(t)}{M_{f\infty}}=b_f^+exp(-R_1^+t)+b_f^-exp(-R_1^-t)+1" title="\Equation 1" />
 </p>
@@ -82,5 +85,5 @@ and
 <a href="https://www.codecogs.com/eqnedit.php?latex=b_f^\pm=\pm\frac{\begin{bmatrix}\frac{M_f(0)}{M_{0f}}-1\end{bmatrix}(R_1^--R_1^\pm)&plus;\begin{bmatrix}\frac{M_f(0)-M_m(0)}{M_{0f}-M_{0f}}\end{bmatrix}k_{fm}}{R_1^&plus;-R_1^-}" target="_blank"><img src="https://latex.codecogs.com/svg.latex?b_f^\pm=\pm\frac{\begin{bmatrix}\frac{M_f(0)}{M_{0f}}-1\end{bmatrix}(R_1^--R_1^\pm)&plus;\begin{bmatrix}\frac{M_f(0)-M_m(0)}{M_{0f}-M_{0f}}\end{bmatrix}k_{fm}}{R_1^&plus;-R_1^-}" title="\Equation 3" /></a>
 </p>
 
-## Notes on markdown.
+_Notes on markdown_
 To embed math, easiest to go to this website. https://www.codecogs.com/latex/eqneditor.php
