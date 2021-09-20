@@ -14,8 +14,9 @@ https://julialang.org/downloads/
 - [Jupyter Notebook](https://github.com/nicksisco1932/The_SIR-qMT_toolbox#jupyter-notebook-with-julia-kernel)
 - [Command Line]
   - [Results of a Successful SIR-qMT fit]
-- [Python]
-- [MATLAB]
+- [Using Python or MATLAB](https://github.com/nicksisco1932/The_SIR-qMT_toolbox/blob/master/README.md#using-matlab-or-python-to-call-julia-examples)
+- [Python]()
+- [MATLAB]()
 
 # Jupyter Notebook with Julia kernel
 If you have not cloned this repository, you can download the zip in the top right of this page or if you are familiar with git, use this. 
@@ -79,7 +80,7 @@ julia ./SIR_fit.jl --TI 15 15 278 1007 --TD 684 4121 2730 10 --SIR_Data $SIR_4D_
 
 ```
   
-**Python**
+### Python
 ```Python
 #!/usr/local/bin/Python3.8              # or this can be your virtual environment
 import os                               # A core library, no virtual environment needed
@@ -102,7 +103,7 @@ sm = 0.83
 julia_call(ti_values, td_values, kmf, sm, SIR_4D_DATA, brain_mask)
 ```
 
-**MATLAB**
+### MATLAB
 
 ```MATLAB
 path=<FULL PATH TO FILES>                     % Full path of image directory
