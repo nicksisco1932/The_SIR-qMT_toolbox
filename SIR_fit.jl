@@ -223,7 +223,7 @@ function main(a)
     # PSR = reshape(Xv[:,1].*100,nx,ny,nz)
     # R1f = reshape(Xv[:,2],nx,ny,nz)
     # Sf = reshape(Xv[:,3],nx,ny,nz)
-    =#
+    
     n,_ = size(Yy)    
     fit_data = zeros(n,4);
     for ii ∈ 1:length(ind)
