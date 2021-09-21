@@ -249,16 +249,16 @@ end
 
 function f(ind::Vector{N},model::Function,X::Array{T},Yy::Array{T},X0::Vector{T})::Array{T} where {N,T} 
     tot,_ = size(Yy)
-    tmpOUT = similar(Yy,tot,4)
+    # tmpOUT = similar(Yy,tot,4)
+    l = length(ind)
+    tmpOUT = similar(Yy,l,4)
     
-    
-    # @time @simd for ii in ind::Vector{N}
-    t = @elapsed for ii in ind # multi threading is actually slower
-    # t = @elapsed Threads.@threads for ii in ind # multi threading is actually slower
+    t = @elapsed for ii ∈ 1:l # multi threading is actually slower
+    # t = @elapsed Threads.@threads for ii ∈ 1:l # multi threading is actually slower
         @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
     end 
     println("The actual fit took $t seconds")
-    perS=Int(floor(tot/t))
+    perS=Int(floor(l/t))
     println("$perS voxels per second")
     tmpOUT
 end
