@@ -191,24 +191,38 @@ function main(a)
     ----------------------------------------------
     =#
 
-    
+    #============ Fitting
+    ========#
     model(x,p) = SIR_Mz0(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)
     
+    # Yy = copy(Yy')
     Yy = copy(Yy')
-    Xv = f(ind,model,times,Yy,X0)
+    ydata = zeros(length(ind),4)
+    
+    for ii ∈ 1:length(ind)
+        ydata[ii,:] = Yy[ind[ii],:]
+    end
+    
+    Xv = f(ind,model,times,ydata,X0)
 
-    #=----------------------------------------------
-    Fit END
-    ----------------------------------------------
-    =#
-
+    println(size(Xv))
+    
     #= 
     Finishing up 
     =#
-    
-    PSR = reshape(Xv[:,1].*100,nx,ny,nz)
-    R1f = reshape(Xv[:,2],nx,ny,nz)
-    Sf = reshape(Xv[:,3],nx,ny,nz)
+    n,_ = size(Yy)    
+    fit_data = zeros(n,4);
+    for ii ∈ 1:length(ind)
+        fit_data[ind[ii],:] = Xv[ii,:]
+    end
+
+    PSR = reshape(fit_data[:,1].*100,nx,ny,nz)
+    R1f = reshape(fit_data[:,2],nx,ny,nz)
+    Sf = reshape(fit_data[:,3],nx,ny,nz)
+
+    # PSR = reshape(Xv[:,1].*100,nx,ny,nz)
+    # R1f = reshape(Xv[:,2],nx,ny,nz)
+    # Sf = reshape(Xv[:,3],nx,ny,nz)
 
 
     PSR[findall(x->x.>100,PSR)].=0
@@ -249,20 +263,19 @@ end
 
 function f(ind::Vector{N},model::Function,X::Array{T},Yy::Array{T},X0::Vector{T})::Array{T} where {N,T} 
     tot,_ = size(Yy)
-    tmpOUT = similar(Yy,tot,4)
+    # tmpOUT = similar(Yy,tot,4)
+    l = length(ind)
+    tmpOUT = similar(Yy,l,4)
     
-    
-    # @time @simd for ii in ind::Vector{N}
-    t = @elapsed for ii in ind # multi threading is actually slower
-    # t = @elapsed Threads.@threads for ii in ind # multi threading is actually slower
+    t = @elapsed for ii ∈ 1:l # multi threading is actually slower
+    # t = @elapsed Threads.@threads for ii ∈ 1:l # multi threading is actually slower
         @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
     end 
     println("The actual fit took $t seconds")
-    perS=Int(floor(tot/t))
+    perS=Int(floor(l/t))
     println("$perS voxels per second")
     tmpOUT
 end
-
 
 
 println(" ")
