@@ -193,10 +193,10 @@ function main(a)
 
     #============ Fitting
     ========#
+    ========#
     model(x,p) = SIR_Mz0(x,p,kmfmat,Sm=Smmat,R1m=NaN,mag=true)
-    
     # Yy = copy(Yy')
-    Yy = copy(Yy')
+    
     ydata = zeros(length(ind),4)
     
     for ii ∈ 1:length(ind)
@@ -207,8 +207,22 @@ function main(a)
 
     println(size(Xv))
     
-    #= 
-    Finishing up 
+    
+    Xv = f(ind,model,times,ydata,X0)
+
+    n,_ = size(Yy)    
+    fit_data = zeros(n,4);
+    for ii ∈ 1:length(ind)
+        fit_data[ind[ii],:] = Xv[ii,:]
+    end
+
+    PSR = reshape(fit_data[:,1].*100,nx,ny,nz)
+    R1f = reshape(fit_data[:,2],nx,ny,nz)
+    Sf = reshape(fit_data[:,3],nx,ny,nz)
+
+    # PSR = reshape(Xv[:,1].*100,nx,ny,nz)
+    # R1f = reshape(Xv[:,2],nx,ny,nz)
+    # Sf = reshape(Xv[:,3],nx,ny,nz)
     =#
     n,_ = size(Yy)    
     fit_data = zeros(n,4);
@@ -264,7 +278,6 @@ end
 function f(ind::Vector{N},model::Function,X::Array{T},Yy::Array{T},X0::Vector{T})::Array{T} where {N,T} 
     tot,_ = size(Yy)
     # tmpOUT = similar(Yy,tot,4)
-    l = length(ind)
     tmpOUT = similar(Yy,l,4)
     
     t = @elapsed for ii ∈ 1:l # multi threading is actually slower
