@@ -39,26 +39,54 @@ LCCC <- function(a,b,l,u,x_lab,y_lab,legend_x,legend_y) {
 }
 
 #----------------------------------------------------------------------------
-## R1f
+# Edit, used percent difference and calculated in Julia. Loading in saved Niftis
 
-known <- readNIfTI('sim_knowns_MC.nii.gz',reorient = FALSE)
-fit <- readNIfTI('R1f_julia_MC.nii.gz',reorient = FALSE)
+# PSR_perc_diff <- readNIfTI('./Res_PSR_julia_MC.nii.gz')
+# R1f_perc_diff <- readNIfTI('./Res_R1f_julia_MC.nii.gz')
+PSR_perc_diff <- readNIfTI('/Users/nicks/Documents/Github/SIR_qMT_python/Res_PSR_julia_MC.nii.gz')
+R1f_perc_diff <- readNIfTI('/Users/nicks/Documents/Github/SIR_qMT_python/Res_R1f_julia_MC.nii.gz')
+
+ind<-PSR_perc_diff!=Inf
+a<-PSR_perc_diff[TRUE]
+b<-R1f_perc_diff[TRUE]
+
+df<-data.frame(x=a,y=b)
+
+p1<-ggplot(df,aes(x=x))+
+    geom_histogram(aes(y=..ndensity..),bins=100)+
+    # geom_density(aes(y=..ndensity..))+
+    theme_classic()+
+    xlab("PSR Percent Difference (%)")
+p2<-ggplot(df,aes(x=y))+
+  geom_histogram(aes(y=..ndensity..),bins=100)+
+  # geom_density(aes(y=..ndensity..))+
+  theme_classic()+
+  xlab("R1f Percent Difference (%)")
+
+ggarrange(p1,p2,
+          labels = c("A","B"),
+          align = 'hv')
+
+# ## R1f
+# 
+known <- readNIfTI('/Users/nicks/Documents/Github/SIR_qMT_python/sim_knowns_MC.nii.gz',reorient = FALSE)
+fit <- readNIfTI('/Users/nicks/Documents/Github/SIR_qMT_python/R1f_julia_MC.nii.gz',reorient = FALSE)
 
 tmp2<-known[,,2] # for R1f
 tmp1<-fit
 
 ind<-tmp2!=Inf
-a<-tmp1[ind]
-b<-tmp2[ind]
+a<-tmp1[TRUE]
+b<-tmp2[TRUE]
 # b[b==0]<-NaN # only for brain masks
 # a[a==0]<-NaN
 
 df<-data.frame(x=a-b)
-p1<-ggplot(df,aes(x))+
-  geom_histogram(aes(y=..ndensity..),bins=100)+
-  # geom_density(aes(y=..ndensity..))+
-  theme_classic()+
-  xlab("R1f Difference, Fit-Known (%)")
+# p1<-ggplot(df,aes(x))+
+#   geom_histogram(aes(y=..ndensity..),bins=100)+
+#   # geom_density(aes(y=..ndensity..))+
+#   theme_classic()+
+#   xlab("R1f Difference, Fit-Known (%)")
 
 A<-LCCC(b,a,0,2,"R1f Known (s-1)","R1f Fit (s-1)",0.5,2)
 A[[1]]
@@ -66,7 +94,7 @@ A[[1]]
 ##-------------------------------------
 # PSR
 
-fit <- readNIfTI('PSR_julia_MC.nii.gz')
+fit <- readNIfTI('/Users/nicks/Documents/Github/SIR_qMT_python/PSR_julia_MC.nii.gz')
 
 tmp2<-known[,,1]*100 # for PSR
 tmp1<-fit
@@ -78,15 +106,15 @@ b<-tmp2[TRUE]
 
 
 df<-data.frame(x=a-b)
-p2<-ggplot(df,aes(x))+
-  geom_histogram(aes(y=..ndensity..),bins=100)+
-  # geom_density(aes(y=..ndensity..))+
-  theme_classic()+
-  xlab("PSR Difference, Fit-Known (%)")
+# p2<-ggplot(df,aes(x))+
+#   geom_histogram(aes(y=..ndensity..),bins=100)+
+#   # geom_density(aes(y=..ndensity..))+
+#   theme_classic()+
+#   xlab("PSR Difference, Fit-Known (%)")
 
 # B<-LCCC(a,b,0,25,"PSR Fit (%)","PSR Known (%)",8,23)
 B<-LCCC(b,a,0,25,"PSR Known (%)","PSR Fit (%)",8,23)
 B[[1]]
-
-ggarrange(p1,p2,A[[1]],B[[1]],
+# 
+ggarrange(p2,p1,A[[1]],B[[1]],
           labels = c("A","B","C","D"),align = 'hv')
