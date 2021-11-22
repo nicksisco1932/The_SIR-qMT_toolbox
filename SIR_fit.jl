@@ -59,7 +59,7 @@
 =#
 using Pkg	
 try
-    println("If is first time you ran the code. It will take a minute to precompile.")
+    println("The first time the code is run will take a minute to precompile.")
     @eval using NIfTI; 
     @eval using LsqFit;
     @eval using Printf
@@ -129,6 +129,7 @@ end
 =#
 
 #= For debugging
+# These are specific paths for Nick to debug code.
 test data /mnt/c/Users/nicks/Documents/MRI_data/PING_brains/TestRetest/output_20210618/proc_20210618/SIR_mo_corr.nii.gz
 test mask /mnt/c/Users/nicks/Documents/MRI_data/PING_brains/TestRetest/output_20210618/proc_20210618/brain_mask.nii.gz
 temp = "/mnt/c/Users/nicks/Documents/MRI_data/PING_brains/TestRetest/output_20210618/proc_20210618/SIR_mo_corr.nii.gz"
@@ -140,6 +141,7 @@ b_fname = joinpath(base,"brain_mask.nii.gz")
 
 function main(a)
     
+	# Set up paths base on user input
     base = dirname(a["SIR_Data"])
     paths = a["SIR_Data"]
     b_fname = joinpath(base,basename(a["SIR_brainMask"]))
@@ -148,6 +150,8 @@ function main(a)
     Variable Definitions
     ----------------------------------------------
     =#
+	# Previously, the fits would fail or generate nonsensical maps because the time units were wrong.
+	# This is now fixed with this if statement.
     # If Error in TD unit handling. If the user puts in ms, convert to s
     if a["TI"][1]>1
         ti_times = a["TI"]* 1E-3
@@ -156,6 +160,9 @@ function main(a)
         ti_times = a["TI"]
         td_times = a["TD"]
     end
+	
+	# Set the kmf and Sm values here. 
+	# Future directions will change this to a fit parameter.
     kmfmat = a["kmf"][1]
     Smmat=a["Sm"][1]
     X0 = [0.07, 1, -1, 1.5];
@@ -174,6 +181,7 @@ function main(a)
     temp=niread(paths)
     temp2=Array{Float64}(temp.raw)
     tempdata=Array{Float64}(zeros(nt,nx,ny,nz))
+	# switched the last column to the first b/c it is faster to loop through this way.
     for ii in 1:nt
         tempdata[ii,:,:,:] = temp2[:,:,:,ii];
     end
@@ -192,8 +200,10 @@ function main(a)
     Yy[findall(x->isinf(x),Yy)].=0
     Yy[findall(x->isnan(x),Yy)].=0
     
+	# deleted this function b/c it made things overly complicated and did not add any value.
     # tot_voxels,times,Yy = reshape_and_normalize( DATA,ti_times,td_times,nx,ny,nz,nt);
     
+	# set up loop indeces to only loop over data within the mask
     vec_mask = reshape(MASK,(tot_voxels));
     ind = findall(x->x==Bool(1),vec_mask)
 
@@ -232,6 +242,7 @@ function main(a)
         fit_data[ind[ii],:] = Xv[ii,:]
     end
 
+	# fill in preallocated maps, reshape, clip, and save the maps.
     PSR = reshape(fit_data[:,1].*100,nx,ny,nz)
     R1f = reshape(fit_data[:,2],nx,ny,nz)
     Sf = reshape(fit_data[:,3],nx,ny,nz)
