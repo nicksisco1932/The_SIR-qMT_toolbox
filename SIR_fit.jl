@@ -64,6 +64,7 @@ try
     @eval using LsqFit;
     @eval using Printf
     @eval using ArgParse;
+    @eval using BenchmarkTools
     Pkg.precompile()
 catch e
     # not found; install and try loading again
@@ -71,6 +72,7 @@ catch e
     Pkg.add("LsqFit")
     Pkg.add("Printf")
     Pkg.add("ArgParse")
+    Pkg.add("BenchmarkTools")
     @eval using NIfTI; 
     @eval using LsqFit;
     @eval using Printf
