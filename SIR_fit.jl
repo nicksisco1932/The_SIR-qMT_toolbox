@@ -64,6 +64,7 @@ try
     @eval using LsqFit;
     @eval using Printf
     @eval using ArgParse;
+    @eval using BenchmarkTools
     Pkg.precompile()
 catch e
     # not found; install and try loading again
@@ -71,6 +72,7 @@ catch e
     Pkg.add("LsqFit")
     Pkg.add("Printf")
     Pkg.add("ArgParse")
+    Pkg.add("BenchmarkTools")
     @eval using NIfTI; 
     @eval using LsqFit;
     @eval using Printf
@@ -224,9 +226,9 @@ function main(a)
    
     l = length(ind)
     tmpOUT = similar(Yy,l,4)
-    
-    t = @elapsed for ii ∈ 1:l # multi threading is actually slower
-    # t = @elapsed Threads.@threads for ii ∈ 1:l # multi threading is actually slower
+
+    println("Available threads: $(Threads.nthreads())")
+    t = @elapsed Threads.@threads for ii ∈ 1:l
         # @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
         @inbounds tmpOUT[ii,:] = nlsfit(model,times,ydata[:,ii],X0)
     end 
