@@ -55,6 +55,10 @@
     "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
     "    - forwarddiff working 
         \n"    
+    "1.2.1  Jan 25, 2022 [nsisco]\n"
+    "     (Nicholas J. Sisco, Ph.D. of Barrow Neurological Institue)\n"
+    "    - After review of manuscript, added suggestions from Tobias Wood.
+        \n"
 
 =#
 using Pkg	
@@ -64,6 +68,7 @@ try
     @eval using LsqFit;
     @eval using Printf
     @eval using ArgParse;
+    @eval using BenchmarkTools # Thank you Tobias Wood
     Pkg.precompile()
 catch e
     # not found; install and try loading again
@@ -71,17 +76,18 @@ catch e
     Pkg.add("LsqFit")
     Pkg.add("Printf")
     Pkg.add("ArgParse")
+    Pkg.add("BenchmarkTools") # Thank you Tobias Wood
     @eval using NIfTI; 
     @eval using LsqFit;
     @eval using Printf
     @eval using ArgParse;
+    @eval using BenchmarkTools  # Thank you Tobias Wood
 end
 
 using NIfTI; 
 using LsqFit;
 using Printf
 using ArgParse;
-
 using BenchmarkTools
 #=----------------------------------------------
     Commandline Arguments
