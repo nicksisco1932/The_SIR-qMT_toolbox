@@ -126,9 +126,6 @@ function commandline()
             help = "Sm value, unless >3T this is 0.83"
     end
 
-    # println(parse_args(settings))
-
-    # parsed_args = SIR_parse_commandline();
     for (out, val) in parse_args(settings)
         println(" $out => $val")
     end
