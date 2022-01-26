@@ -147,7 +147,6 @@ paths = [joinpath(base,"SIR_mo_corr.nii.gz")]
 b_fname = joinpath(base,"brain_mask.nii.gz")
 =#
 
-#TESTING: Making the fitting for loop a function
 function loop_fit(N::Integer,OUTMAT::Array{T},f::Function, xvals::Array{T},yvals::Array{T},guesses::Vector{T}) where T
     # t = @elapsed for ii ∈ 1:l 
     t = @elapsed Threads.@threads for ii ∈ 1:N # evaluated with @btime. Actually faster now.
