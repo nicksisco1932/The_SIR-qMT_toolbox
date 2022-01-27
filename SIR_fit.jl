@@ -243,17 +243,12 @@ end
 l = length(ind)
 tmpOUT = similar(Yy,l,4)
 
-# t = @elapsed for ii ∈ 1:l # multi threading is actually slower
-# # t = @elapsed Threads.@threads for ii ∈ 1:l # multi threading is actually slower
-#     # @inbounds tmpOUT[ii,:] = nlsfit(model,X,Yy[ii,:],X0)
-#     @inbounds tmpOUT[ii,:] = nlsfit(model,times,ydata[:,ii],X0)
-# end 
 t,tmpOUT = loop_fit(l,tmpOUT,model,times,ydata,X0)
 
-#= 
+#= NOT RUN
 This @btime macro is for testing the script time several times. We'll see if mulit threading is one-off or truely slow 
-=#
 @btime loop_fit(l,tmpOUT,model,times,ydata,X0)
+NOT RUN =# 
 
 println("The actual fit took $t seconds")
 perS=Int(floor(l/t))
