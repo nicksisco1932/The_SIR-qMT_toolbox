@@ -160,6 +160,10 @@ println(" ")
 println(" ")
 println(" ")
 
+#TODO: Currently only uses 2 threads max
+# We did extensive testing, and found that for some reason 2 threads is the fastest as of 20220127
+# Hard coding the number of threads to 2
+Threads.nthreads() = 2 
 
     
 # Set up paths base on user input
