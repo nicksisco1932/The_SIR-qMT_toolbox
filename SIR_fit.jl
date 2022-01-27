@@ -72,7 +72,6 @@ try
     println("The first time the code is run will take a minute to precompile.")
     @eval using NIfTI; 
     @eval using LsqFit;
-    @eval using Printf
     @eval using ArgParse;
     @eval using BenchmarkTools # Thank you Tobias Wood
     Pkg.precompile()
@@ -80,19 +79,16 @@ catch e
     # not found; install and try loading again
     Pkg.add("NIfTI")
     Pkg.add("LsqFit")
-    Pkg.add("Printf")
     Pkg.add("ArgParse")
     Pkg.add("BenchmarkTools") # Thank you Tobias Wood
     @eval using NIfTI; 
     @eval using LsqFit;
-    @eval using Printf
     @eval using ArgParse;
     @eval using BenchmarkTools  # Thank you Tobias Wood
 end
 
 using NIfTI; 
 using LsqFit;
-using Printf
 using ArgParse;
 using BenchmarkTools
 #=----------------------------------------------
@@ -218,15 +214,12 @@ tot_voxels = nx*ny*nz
 times=hcat(ti_times,td_times)
 tmp = reshape(DATA,(nt,tot_voxels));
 Yy = similar(tmp)
-@simd for ii in 1:tot_voxels
+@simd for ii ∈ 1:tot_voxels
     @inbounds Yy[:,ii] = tmp[:,ii] / (tmp[end, ii])
 end
 
 Yy[findall(x->isinf(x),Yy)].=0
 Yy[findall(x->isnan(x),Yy)].=0
-
-# deleted this function b/c it made things overly complicated and did not add any value.
-# tot_voxels,times,Yy = reshape_and_normalize( DATA,ti_times,td_times,nx,ny,nz,nt);
 
 # set up loop indeces to only loop over data within the mask
 vec_mask = reshape(MASK,(tot_voxels));
@@ -293,11 +286,11 @@ tmp1 = voxel_size(d.header)[1]
 tmp2 = voxel_size(d.header)[2]
 tmp3 = voxel_size(d.header)[3]
 
-PSR_fname = @sprintf("%s/SIR_Brain_PSR_julia.nii.gz",base) # I'm thinking that we could get rid of sprintf and use $base/<filename>
-R1f_fname = @sprintf("%s/SIR_Brain_R1f_julia.nii.gz",base)
-SF_fname = @sprintf("%s/SIR_Brain_Sf_julia.nii.gz",base)
+PSR_fname = joinpath(base,"SIR_Brain_PSR_julia.nii.gz") 
+R1f_fname = joinpath(base,"SIR_Brain_R1f_julia.nii.gz")
+SF_fname = joinpath(base,"SIR_Brain_Sf_julia.nii.gz")
 
-fname_1 = @sprintf("%s/SIR_DATA.nii.gz",base)
+fname_1 = joinpath(base,"SIR_DATA.nii.gz")
 niwrite(PSR_fname,NIVolume(PSR;voxel_size=(tmp1,tmp2,tmp3)))
 niwrite(R1f_fname,NIVolume(R1f;voxel_size=(tmp1,tmp2,tmp3)))
 niwrite(SF_fname,NIVolume(Sf;voxel_size=(tmp1,tmp2,tmp3)))
