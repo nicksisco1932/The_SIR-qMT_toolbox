@@ -15,23 +15,6 @@
 
 =#
 
-function reshape_and_normalize(data_4d::Array{T},TI::Vector{T},TD::Vector{T},NX::Int64,NY::Int64,NZ::Int64,NT) where T
-    # [pmf R1f Sf M0f]
-
-    tot_voxels = NX*NY*NZ
-    X=hcat(TI,TD)
-    tmp = reshape(data_4d,(NT,tot_voxels));
-    Yy = similar(tmp)
-    @simd for ii in 1:tot_voxels
-        @inbounds Yy[:,ii] = tmp[:,ii] / (tmp[end, ii])
-    end
-
-    Yy[findall(x->isinf(x),Yy)].=0
-    Yy[findall(x->isnan(x),Yy)].=0
-
-    return tot_voxels,X,Yy
-end
-
 function nlsfit(f::Function, xvalues::Array{T},yvalues::Vector{T},guesses::Vector{T})::Vector{T} where {T}
     # f(xvalues,guesses)
     # yvalues
