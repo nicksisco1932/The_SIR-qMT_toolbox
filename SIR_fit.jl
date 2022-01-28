@@ -163,8 +163,14 @@ println(" ")
 #TODO: Currently only uses 2 threads max
 # We did extensive testing, and found that for some reason 2 threads is the fastest as of 20220127
 # Hard coding the number of threads to 2
-Threads.nthreads() = 2 
-
+hard_thread = 2
+total_threads=Threads.nthreads()
+Threads.nthreads() = hard_thread
+println(" ")
+println("Out of $total_threads, using $hard_thread. ")
+println("After extensive testing, 2 threads was the best. 20220127-NS")
+println("Hopefully it will be better in the future.")
+println(" ")
     
 # Set up paths base on user input
 base = dirname(a["SIR_Data"])
@@ -251,10 +257,11 @@ t,tmpOUT = loop_fit(l,tmpOUT,model,times,ydata,X0)
 
 #= NOT RUN
 This @btime macro is for testing the script time several times. We'll see if mulit threading is one-off or truely slow 
-@btime loop_fit(l,tmpOUT,model,times,ydata,X0)
+    @btime loop_fit($l,$tmpOUT,$model,$times,$ydata,$X0)
+    @btime model($times,$X0) Figure out where the allocations are happening. Not in the model. - 20220127-NS
 NOT RUN =# 
 
-println("The actual fit took $t seconds")
+println("The fit took $t seconds")
 perS=Int(floor(l/t))
 println("$perS voxels per second")
 Xv = tmpOUT
@@ -304,9 +311,3 @@ println("The R1f is saved at $R1f_fname")
 println("The Sf is saved at $SF_fname")
 println("The original data was copied to $fname_1")
 println(" in the same image space as the PSR map")
-
-
-# println(" ")
-# println(" ")
-# println(" ")
-# println("The entire script took $tt seconds")
